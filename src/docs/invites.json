@@ -1,0 +1,326 @@
+{
+  "info": {
+    "title": "Gtracker API - Invite Codes",
+    "description": "Documentação das rotas de códigos de convite e configurações de admin",
+    "version": "1.0.0",
+    "baseUrl": "/api/v1"
+  },
+  "endpoints": {
+    "getRegistrationStatus": {
+      "method": "GET",
+      "path": "/invites/status",
+      "fullPath": "/api/v1/invites/status",
+      "description": "Verificar se o registro exige código de convite",
+      "authentication": false,
+      "responses": {
+        "200": {
+          "description": "Status retornado com sucesso",
+          "example": {
+            "success": true,
+            "data": {
+              "requireInviteCode": false,
+              "registrationOpen": true
+            }
+          }
+        }
+      }
+    },
+    "validateInviteCode": {
+      "method": "GET",
+      "path": "/invites/validate/:code",
+      "fullPath": "/api/v1/invites/validate/:code",
+      "description": "Validar se um código de convite é válido",
+      "authentication": false,
+      "parameters": {
+        "code": {
+          "type": "string",
+          "in": "path",
+          "required": true,
+          "description": "Código de convite (6 caracteres)",
+          "example": "ABC123"
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Código válido",
+          "example": {
+            "success": true,
+            "data": {
+              "valid": true,
+              "inviteCode": {
+                "code": "ABC123",
+                "is_active": true
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Código inválido ou já utilizado",
+          "example": {
+            "success": false,
+            "error": {
+              "message": "Código de convite inválido ou já utilizado"
+            }
+          }
+        }
+      }
+    },
+    "getMyInviteCodes": {
+      "method": "GET",
+      "path": "/invites/my",
+      "fullPath": "/api/v1/invites/my",
+      "description": "Listar meus códigos de convite",
+      "authentication": true,
+      "headers": {
+        "Authorization": "Bearer <token>"
+      },
+      "responses": {
+        "200": {
+          "description": "Lista de códigos retornada",
+          "example": {
+            "success": true,
+            "data": {
+              "inviteCodes": [
+                {
+                  "id": "uuid",
+                  "code": "XYZ789",
+                  "owner_id": "uuid",
+                  "used_by_id": null,
+                  "is_active": true,
+                  "used_at": null,
+                  "created_at": "2024-01-15T10:30:00.000Z"
+                },
+                {
+                  "id": "uuid",
+                  "code": "ABC123",
+                  "owner_id": "uuid",
+                  "used_by_id": "uuid-do-usuario",
+                  "is_active": false,
+                  "used_at": "2024-01-16T14:22:00.000Z",
+                  "created_at": "2024-01-15T10:30:00.000Z"
+                }
+              ]
+            }
+          }
+        },
+        "401": {
+          "description": "Não autenticado",
+          "example": {
+            "success": false,
+            "error": {
+              "message": "Token não fornecido"
+            }
+          }
+        }
+      }
+    },
+    "toggleInviteRequirement": {
+      "method": "PUT",
+      "path": "/admin/settings/registration",
+      "fullPath": "/api/v1/admin/settings/registration",
+      "description": "Ativar ou desativar exigência de código de convite para registro (apenas admin)",
+      "authentication": true,
+      "authorization": "admin",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer <token>"
+      },
+      "request": {
+        "body": {
+          "required": {
+            "type": "boolean",
+            "required": true,
+            "description": "true = exigir invite code, false = registro aberto",
+            "example": true
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Configuração atualizada",
+          "examples": [
+            {
+              "success": true,
+              "data": {
+                "requireInviteCode": true,
+                "message": "Registro agora exige código de convite"
+              }
+            },
+            {
+              "success": true,
+              "data": {
+                "requireInviteCode": false,
+                "message": "Registro agora está aberto para todos"
+              }
+            }
+          ]
+        },
+        "401": {
+          "description": "Não autenticado",
+          "example": {
+            "success": false,
+            "error": {
+              "message": "Token não fornecido"
+            }
+          }
+        },
+        "403": {
+          "description": "Não autorizado (não é admin)",
+          "example": {
+            "success": false,
+            "error": {
+              "message": "Acesso restrito a administradores"
+            }
+          }
+        }
+      }
+    },
+    "getAdminSettings": {
+      "method": "GET",
+      "path": "/admin/settings",
+      "fullPath": "/api/v1/admin/settings",
+      "description": "Listar todas configurações do sistema (apenas admin)",
+      "authentication": true,
+      "authorization": "admin",
+      "headers": {
+        "Authorization": "Bearer <token>"
+      },
+      "responses": {
+        "200": {
+          "description": "Configurações retornadas",
+          "example": {
+            "success": true,
+            "data": {
+              "settings": [
+                {
+                  "id": "uuid",
+                  "key": "require_invite_code",
+                  "value": "false",
+                  "description": "Se true, exige código de convite para registro",
+                  "updated_by": null,
+                  "created_at": "2024-01-01T00:00:00.000Z",
+                  "updated_at": "2024-01-01T00:00:00.000Z"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "getRegistrationSettings": {
+      "method": "GET",
+      "path": "/admin/settings/registration",
+      "fullPath": "/api/v1/admin/settings/registration",
+      "description": "Verificar configuração de registro (apenas admin)",
+      "authentication": true,
+      "authorization": "admin",
+      "headers": {
+        "Authorization": "Bearer <token>"
+      },
+      "responses": {
+        "200": {
+          "description": "Status retornado",
+          "example": {
+            "success": true,
+            "data": {
+              "requireInviteCode": false,
+              "registrationOpen": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "models": {
+    "InviteCode": {
+      "description": "Modelo de código de convite",
+      "fields": {
+        "id": {
+          "type": "uuid",
+          "description": "Identificador único"
+        },
+        "code": {
+          "type": "string",
+          "description": "Código de 6 caracteres (A-Z, 0-9)"
+        },
+        "owner_id": {
+          "type": "uuid",
+          "description": "ID do usuário dono do código"
+        },
+        "used_by_id": {
+          "type": "uuid | null",
+          "description": "ID do usuário que usou o código"
+        },
+        "is_active": {
+          "type": "boolean",
+          "description": "Se o código ainda pode ser usado"
+        },
+        "used_at": {
+          "type": "datetime | null",
+          "description": "Data/hora que foi usado"
+        },
+        "created_at": {
+          "type": "datetime",
+          "description": "Data de criação"
+        }
+      }
+    },
+    "SystemSetting": {
+      "description": "Modelo de configuração do sistema",
+      "fields": {
+        "id": {
+          "type": "uuid",
+          "description": "Identificador único"
+        },
+        "key": {
+          "type": "string",
+          "description": "Chave da configuração"
+        },
+        "value": {
+          "type": "string",
+          "description": "Valor da configuração"
+        },
+        "description": {
+          "type": "string | null",
+          "description": "Descrição da configuração"
+        },
+        "updated_by": {
+          "type": "uuid | null",
+          "description": "ID do usuário que atualizou"
+        },
+        "created_at": {
+          "type": "datetime",
+          "description": "Data de criação"
+        },
+        "updated_at": {
+          "type": "datetime",
+          "description": "Data da última atualização"
+        }
+      }
+    }
+  },
+  "flowDescription": {
+    "registration": {
+      "openRegistration": [
+        "1. Usuário acessa GET /invites/status",
+        "2. Se requireInviteCode = false, pode registrar sem código",
+        "3. Usuário faz POST /auth/register (inviteCode opcional)",
+        "4. Usuário é criado + perfil + 1 invite code gerado"
+      ],
+      "closedRegistration": [
+        "1. Usuário acessa GET /invites/status",
+        "2. Se requireInviteCode = true, precisa de código",
+        "3. Usuário valida código em GET /invites/validate/:code",
+        "4. Usuário faz POST /auth/register com inviteCode",
+        "5. Código é marcado como usado",
+        "6. Usuário é criado + perfil + 1 novo invite code gerado"
+      ]
+    },
+    "adminControl": [
+      "1. Admin faz login",
+      "2. Admin acessa PUT /admin/settings/registration",
+      "3. Envia { required: true } para fechar registro",
+      "4. Envia { required: false } para abrir registro"
+    ]
+  }
+}
