@@ -1,0 +1,247 @@
+{
+  "categorias": [
+    {
+      "nome": "Social",
+      "subcategorias": [
+        {
+          "nome": "Notícias",
+          "subcategorias": [
+            { "nome": "Mundo" },
+            { "nome": "Tecnologia" },
+            { "nome": "Entretenimento" },
+            { "nome": "Games" }
+          ]
+        },
+        {
+          "nome": "Novidades",
+          "subcategorias": [
+            { "nome": "Atualizações do Fórum" },
+            { "nome": "Novos Recursos" },
+            { "nome": "Eventos da Comunidade" }
+          ]
+        },
+        {
+          "nome": "Cargos Abertos",
+          "subcategorias": [
+            { "nome": "Moderação" },
+            { "nome": "Uploader" },
+            { "nome": "Desenvolvimento" }
+          ]
+        },
+        {
+          "nome": "Apresentações",
+          "subcategorias": [
+            { "nome": "Novos Membros" },
+            { "nome": "Equipe Oficial" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "nome": "GTracker",
+      "subcategorias": [
+        {
+          "nome": "Filmes",
+          "subcategorias": [
+            {
+              "nome": "4K UHD"
+            },
+            {
+              "nome": "BluRay 1080p"
+            },
+            {
+              "nome": "720p / 1080p WEB"
+            },
+            {
+              "nome": "Coleções",
+              "subcategorias": [
+                { "nome": "Franquias" },
+                { "nome": "Sagas" },
+                { "nome": "Trilogias" }
+              ]
+            }
+          ]
+        },
+
+        {
+          "nome": "Séries",
+          "subcategorias": [
+            { "nome": "Completas" },
+            { "nome": "Episódios Semanais" }
+          ]
+        },
+
+        {
+          "nome": "Jogos",
+          "subcategorias": [
+            {
+              "nome": "Computador",
+              "subcategorias": [
+                { "nome": "Windows" },
+                { "nome": "Linux" },
+                { "nome": "Mac" }
+              ]
+            },
+            {
+              "nome": "Consoles",
+              "subcategorias": [
+                { "nome": "PlayStation" },
+                { "nome": "Xbox" },
+                { "nome": "Nintendo" }
+              ]
+            }
+          ]
+        },
+
+        {
+          "nome": "Softwares",
+          "subcategorias": [
+            { "nome": "Windows" },
+            { "nome": "Mac Os" },
+            { "nome": "Linux" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "nome": "Comunidade",
+      "subcategorias": [
+        {
+          "nome": "Filmes",
+          "subcategorias": [
+            {
+              "nome": "4K UHD",
+              "subcategorias": [
+              ]
+            },
+            {
+              "nome": "BluRay / 1080p"
+            }
+          ]
+        },
+        {
+          "nome": "Séries",
+            "subcategorias": [
+            { "nome": "Completas" },
+            { "nome": "Episódios Semanais" }
+          ]
+        },
+        {
+          "nome": "Jogos",
+          "subcategorias": [
+            { "nome": "PC" },
+            { "nome": "Consoles" },
+            { "nome": "Mobile" },
+            { "nome": "Indie" }
+          ]
+        },
+        {
+          "nome": "Criadores de Conteúdo",
+          "subcategorias": [
+            { "nome": "Mods" },
+            { "nome": "Fansites" },
+            { "nome": "Projetos da Comunidade" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "nome": "Suporte",
+      "subcategorias": [
+        {
+          "nome": "Suporte Técnico",
+          "subcategorias": [
+            { "nome": "Problemas de Login" },
+            { "nome": "Bugs no Fórum" },
+            { "nome": "Reportar Erros" }
+          ]
+        },
+        {
+          "nome": "Tutoriais",
+          "subcategorias": [
+            { "nome": "Como usar o Fórum" },
+            { "nome": "Uploads / Downloads" },
+            { "nome": "Regras de Postagem" }
+          ]
+        },
+        {
+          "nome": "Sugestões",
+          "subcategoracias": [
+            { "nome": "Melhorias" },
+            { "nome": "Pedidos de Categorias" },
+            { "nome": "Votações da Comunidade" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "nome": "Entretenimento",
+      "subcategorias": [
+        {
+          "nome": "Músicas",
+          "subcategorias": [
+            { "nome": "MP3" },
+            { "nome": "FLAC" },
+            { "nome": "Shows / Concertos" }
+          ]
+        },
+        {
+          "nome": "Animes & Mangás",
+          "subcategorias": [
+            { "nome": "Episódios" },
+            { "nome": "Filmes" },
+            { "nome": "Reviews" }
+          ]
+        },
+        {
+          "nome": "Livros & HQs",
+          "subcategorias": [
+            { "nome": "Ebooks" },
+            { "nome": "Comics" },
+            { "nome": "Reviews" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "nome": "Off-Topic",
+      "subcategorias": [
+        {
+          "nome": "Conversas Gerais",
+          "subcategorias": [
+            { "nome": "Aleatório" },
+            { "nome": "Curiosidades" }
+          ]
+        },
+        {
+          "nome": "Tecnologia",
+          "subcategorias": [
+            { "nome": "Hardware" },
+            { "nome": "Software" },
+            { "nome": "Mobile" }
+          ]
+        },
+        {
+          "nome": "Humor",
+          "subcategorias": [
+            { "nome": "Memes" },
+            { "nome": "Piadas" }
+          ]
+        },
+        {
+          "nome": "Marketplace",
+          "subcategorias": [
+            { "nome": "Trocas" },
+            { "nome": "Vendas" },
+            { "nome": "Serviços" }
+          ]
+        }
+      ]
+    }
+  ]
+}

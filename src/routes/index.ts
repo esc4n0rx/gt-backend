@@ -3,6 +3,8 @@ import authRoutes from './auth-routes';
 import inviteRoutes from './invite-routes';
 import adminRoutes from './admin-routes';
 import profileRoutes from './profile-routes';
+import moderationRoutes from './moderation-routes';
+import categoryRoutes from './category-routes';
 
 const router: Router = Router();
 
@@ -10,5 +12,7 @@ router.use('/auth', authRoutes);
 router.use('/invites', inviteRoutes);
 router.use('/admin', adminRoutes);
 router.use('/profile', profileRoutes);
+router.use('/moderation', moderationRoutes);
+router.use('/categories', categoryRoutes);
 
 export default router;

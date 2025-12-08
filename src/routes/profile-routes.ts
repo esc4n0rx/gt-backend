@@ -11,7 +11,7 @@ import {
   confirmPasswordChangeSchema,
 } from '../validators/profile-validators';
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * Todas as rotas de perfil requerem autenticação

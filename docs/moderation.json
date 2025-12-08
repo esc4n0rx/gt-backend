@@ -1,0 +1,554 @@
+{
+  "feature": "Moderation & Role Management",
+  "description": "Sistema hierárquico de cargos com gerenciamento de banimentos e promoções. Master controla tudo, Admin gerencia moderadores e abaixo, Moderadores administram suporte para baixo. Todos os banimentos e mudanças de cargo são registrados com IP, data e motivo.",
+  "baseUrl": "/api/v1/moderation",
+  "authentication": "Todas as rotas requerem Bearer Token JWT no header Authorization e cargo mínimo de Moderador",
+  "roleHierarchy": {
+    "description": "Hierarquia de cargos do menor para o maior",
+    "levels": {
+      "1": "usuario / vip",
+      "2": "uploader",
+      "3": "suporte",
+      "4": "moderador",
+      "5": "admin",
+      "6": "master"
+    },
+    "permissions": {
+      "master": "Controla tudo, pode banir e alterar cargo de qualquer usuário",
+      "admin": "Gerencia moderadores e abaixo, pode banir de moderador para baixo",
+      "moderador": "Administra suporte para baixo, pode banir de suporte para baixo",
+      "suporte": "Sem permissões de moderação",
+      "uploader": "Sem permissões de moderação",
+      "usuario": "Sem permissões de moderação",
+      "vip": "Sem permissões de moderação"
+    }
+  },
+  "routes": [
+    {
+      "name": "Banir Usuário",
+      "method": "POST",
+      "path": "/bans/:userId",
+      "description": "Aplica banimento permanente ou temporário em um usuário. Requer cargo de Moderador ou superior e respeita hierarquia de cargos",
+      "authentication": "Required (Moderador+)",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "params": {
+        "userId": "UUID do usuário a ser banido"
+      },
+      "body": {
+        "reason": "string (motivo do banimento, 10-500 caracteres)",
+        "isPermanent": "boolean (opcional, default: true)",
+        "expiresInDays": "number (obrigatório se isPermanent=false, dias até expiração)"
+      },
+      "example": {
+        "reason": "Spam repetido em múltiplos tópicos após advertência",
+        "isPermanent": false,
+        "expiresInDays": 7
+      },
+      "validations": {
+        "reason": "Mínimo 10 caracteres, máximo 500",
+        "expiresInDays": "Obrigatório para banimentos temporários, deve ser número inteiro positivo",
+        "hierarchy": "Só pode banir usuários de cargo inferior ao seu"
+      },
+      "hierarchyRules": {
+        "master": "Pode banir todos",
+        "admin": "Pode banir de moderador para baixo",
+        "moderador": "Pode banir de suporte para baixo"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "ban": {
+            "id": "uuid",
+            "targetUser": {
+              "id": "uuid",
+              "username": "string",
+              "name": "string"
+            },
+            "bannedBy": {
+              "id": "uuid",
+              "username": "string",
+              "name": "string"
+            },
+            "reason": "string",
+            "isPermanent": "boolean",
+            "expiresAt": "timestamp | null",
+            "createdAt": "timestamp"
+          },
+          "message": "Usuário {username} foi banido com sucesso"
+        }
+      }
+    },
+    {
+      "name": "Desbanir Usuário",
+      "method": "DELETE",
+      "path": "/bans/:userId",
+      "description": "Remove o banimento ativo de um usuário. Requer cargo de Moderador ou superior e respeita hierarquia",
+      "authentication": "Required (Moderador+)",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "params": {
+        "userId": "UUID do usuário a ser desbanido"
+      },
+      "body": {
+        "reason": "string (opcional, motivo do desbanimento, máx 500 caracteres)"
+      },
+      "example": {
+        "reason": "Apelo aceito após demonstração de mudança de comportamento"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "message": "Usuário {username} foi desbanido com sucesso",
+          "unban": {
+            "targetUser": {
+              "id": "uuid",
+              "username": "string",
+              "name": "string"
+            },
+            "unbannedBy": {
+              "id": "uuid",
+              "username": "string",
+              "name": "string"
+            },
+            "reason": "string | null"
+          }
+        }
+      }
+    },
+    {
+      "name": "Listar Usuários Banidos",
+      "method": "GET",
+      "path": "/bans?limit=50&offset=0",
+      "description": "Lista todos os usuários atualmente banidos com paginação",
+      "authentication": "Required (Moderador+)",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "queryParams": {
+        "limit": "number (opcional, default: 50, máximo por página)",
+        "offset": "number (opcional, default: 0, itens a pular)"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "bans": [
+            {
+              "id": "uuid",
+              "target_user_id": "uuid",
+              "banned_by_user_id": "uuid",
+              "reason": "string",
+              "ip_address": "string | null",
+              "user_agent": "string | null",
+              "is_permanent": "boolean",
+              "expires_at": "timestamp | null",
+              "is_active": "boolean",
+              "created_at": "timestamp",
+              "updated_at": "timestamp",
+              "target_user": {
+                "id": "uuid",
+                "username": "string",
+                "name": "string"
+              },
+              "banned_by": {
+                "id": "uuid",
+                "username": "string",
+                "name": "string"
+              }
+            }
+          ],
+          "pagination": {
+            "limit": 50,
+            "offset": 0,
+            "count": 10
+          }
+        }
+      }
+    },
+    {
+      "name": "Histórico de Banimentos de Usuário",
+      "method": "GET",
+      "path": "/bans/history/:userId",
+      "description": "Retorna todo o histórico de banimentos e desbanimentos de um usuário específico",
+      "authentication": "Required (Moderador+)",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "params": {
+        "userId": "UUID do usuário"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "user": {
+            "id": "uuid",
+            "username": "string",
+            "name": "string"
+          },
+          "bans": [
+            {
+              "id": "uuid",
+              "reason": "string",
+              "is_permanent": "boolean",
+              "expires_at": "timestamp | null",
+              "is_active": "boolean",
+              "created_at": "timestamp"
+            }
+          ],
+          "unbans": [
+            {
+              "id": "uuid",
+              "ban_id": "uuid",
+              "reason": "string | null",
+              "created_at": "timestamp"
+            }
+          ],
+          "totalBans": "number",
+          "activeBan": "object | null"
+        }
+      }
+    },
+    {
+      "name": "Alterar Cargo de Usuário",
+      "method": "PATCH",
+      "path": "/roles/:userId",
+      "description": "Altera o cargo de um usuário. Requer cargo superior ao usuário alvo e ao cargo sendo atribuído",
+      "authentication": "Required (Moderador+)",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "params": {
+        "userId": "UUID do usuário"
+      },
+      "body": {
+        "newRole": "string (usuario | vip | uploader | suporte | moderador | admin | master)",
+        "reason": "string (opcional, motivo da mudança, máx 500 caracteres)"
+      },
+      "example": {
+        "newRole": "moderador",
+        "reason": "Promovido por contribuições consistentes e comportamento exemplar"
+      },
+      "validations": {
+        "newRole": "Deve ser um cargo válido",
+        "hierarchy": "Só pode alterar cargo de usuários de cargo inferior",
+        "canAssign": "Só pode atribuir cargos inferiores ao seu"
+      },
+      "hierarchyRules": {
+        "master": "Pode alterar qualquer cargo para qualquer cargo",
+        "admin": "Pode gerenciar de moderador para baixo",
+        "moderador": "Pode gerenciar de suporte para baixo",
+        "examples": [
+          "Admin não pode promover alguém para Admin ou Master",
+          "Moderador não pode alterar cargo de Admin",
+          "Moderador não pode promover alguém para Admin"
+        ]
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "message": "Cargo de {username} alterado de {oldRole} para {newRole}",
+          "roleChange": {
+            "targetUser": {
+              "id": "uuid",
+              "username": "string",
+              "name": "string"
+            },
+            "changedBy": {
+              "id": "uuid",
+              "username": "string",
+              "name": "string"
+            },
+            "oldRole": "string",
+            "newRole": "string",
+            "reason": "string | null"
+          }
+        }
+      }
+    },
+    {
+      "name": "Histórico de Mudanças de Cargo",
+      "method": "GET",
+      "path": "/roles/history/:userId?limit=50",
+      "description": "Retorna o histórico completo de mudanças de cargo de um usuário",
+      "authentication": "Required (Moderador+)",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "params": {
+        "userId": "UUID do usuário"
+      },
+      "queryParams": {
+        "limit": "number (opcional, default: 50)"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "user": {
+            "id": "uuid",
+            "username": "string",
+            "name": "string",
+            "currentRole": "string"
+          },
+          "roleChanges": [
+            {
+              "id": "uuid",
+              "old_role": "string",
+              "new_role": "string",
+              "reason": "string | null",
+              "created_at": "timestamp",
+              "target_user": {
+                "id": "uuid",
+                "username": "string",
+                "name": "string"
+              },
+              "changed_by": {
+                "id": "uuid",
+                "username": "string",
+                "name": "string"
+              }
+            }
+          ],
+          "totalChanges": "number"
+        }
+      }
+    },
+    {
+      "name": "Listar Mudanças de Cargo Recentes",
+      "method": "GET",
+      "path": "/roles/changes?limit=50&offset=0",
+      "description": "Lista todas as mudanças de cargo recentes com paginação",
+      "authentication": "Required (Moderador+)",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "queryParams": {
+        "limit": "number (opcional, default: 50)",
+        "offset": "number (opcional, default: 0)"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "roleChanges": [
+            {
+              "id": "uuid",
+              "old_role": "string",
+              "new_role": "string",
+              "reason": "string | null",
+              "created_at": "timestamp",
+              "target_user": {
+                "id": "uuid",
+                "username": "string",
+                "name": "string"
+              },
+              "changed_by": {
+                "id": "uuid",
+                "username": "string",
+                "name": "string"
+              }
+            }
+          ],
+          "pagination": {
+            "limit": 50,
+            "offset": 0,
+            "count": 25
+          }
+        }
+      }
+    },
+    {
+      "name": "Estatísticas de Moderação",
+      "method": "GET",
+      "path": "/stats",
+      "description": "Retorna estatísticas gerais sobre ações de moderação",
+      "authentication": "Required (Moderador+)",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "stats": {
+            "bans": {
+              "active": "number"
+            },
+            "roleChanges": {
+              "total": "number",
+              "last24h": "number",
+              "last7days": "number"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "errorResponses": {
+    "400": {
+      "description": "Bad Request - Validação falhou ou ação inválida",
+      "examples": [
+        {
+          "success": false,
+          "error": {
+            "message": "Usuário já está banido",
+            "code": "BAD_REQUEST"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "O usuário já possui este cargo",
+            "code": "BAD_REQUEST"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Para banimento temporário, é necessário especificar expiresInDays",
+            "code": "BAD_REQUEST"
+          }
+        }
+      ]
+    },
+    "401": {
+      "description": "Unauthorized - Token inválido ou não fornecido",
+      "example": {
+        "success": false,
+        "error": {
+          "message": "Token inválido ou expirado",
+          "code": "UNAUTHORIZED"
+        }
+      }
+    },
+    "403": {
+      "description": "Forbidden - Sem permissão para realizar a ação",
+      "examples": [
+        {
+          "success": false,
+          "error": {
+            "message": "Você não tem permissão para banir este usuário",
+            "code": "FORBIDDEN"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Você não pode alterar o cargo deste usuário",
+            "code": "FORBIDDEN"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Você não pode atribuir este cargo",
+            "code": "FORBIDDEN"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Acesso restrito. Cargos permitidos: moderador, admin, master",
+            "code": "FORBIDDEN"
+          }
+        }
+      ]
+    },
+    "404": {
+      "description": "Not Found - Recurso não encontrado",
+      "examples": [
+        {
+          "success": false,
+          "error": {
+            "message": "Usuário não encontrado",
+            "code": "NOT_FOUND"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Usuário não está banido",
+            "code": "BAD_REQUEST"
+          }
+        }
+      ]
+    }
+  },
+  "security": {
+    "authentication": "JWT Bearer Token com verificação de cargo",
+    "roleVerification": "Cada rota verifica se o usuário tem cargo mínimo necessário",
+    "hierarchyEnforcement": "Sistema impede ações em usuários de cargo igual ou superior",
+    "auditLog": "Todas as ações registram: usuário alvo, executor, motivo, IP, user-agent e timestamp",
+    "automaticSync": "Trigger SQL sincroniza is_banned no perfil automaticamente",
+    "temporaryBans": "Sistema expira banimentos temporários automaticamente (via função SQL)"
+  },
+  "database": {
+    "tables": [
+      "bans (id, target_user_id, banned_by_user_id, reason, ip_address, user_agent, is_permanent, expires_at, is_active)",
+      "unbans (id, ban_id, target_user_id, unbanned_by_user_id, reason, ip_address, user_agent)",
+      "role_changes (id, target_user_id, changed_by_user_id, old_role, new_role, reason, ip_address, user_agent)"
+    ],
+    "migrations": [
+      "003_role_hierarchy_system.sql"
+    ],
+    "functions": [
+      "get_role_hierarchy(role) - Retorna nível hierárquico numérico do cargo",
+      "can_manage_user(manager_role, target_role) - Verifica se pode gerenciar usuário",
+      "expire_temporary_bans() - Expira banimentos temporários (executar via cron)",
+      "sync_ban_status() - Trigger que sincroniza is_banned no perfil"
+    ],
+    "enums": [
+      "user_role: usuario, vip, uploader, suporte, moderador, admin, master"
+    ]
+  },
+  "cronJobs": {
+    "expireTemporaryBans": {
+      "description": "Expira banimentos temporários automaticamente",
+      "recommended": "A cada 5 minutos",
+      "function": "SELECT expire_temporary_bans();"
+    }
+  },
+  "exampleFlows": {
+    "banUser": [
+      "1. Moderador autentica com JWT",
+      "2. POST /moderation/bans/{userId} com reason e isPermanent",
+      "3. Sistema verifica se moderador pode banir o usuário (hierarquia)",
+      "4. Banimento criado e is_banned=true automaticamente via trigger",
+      "5. Registro completo com IP, user-agent e timestamp"
+    ],
+    "promoteUser": [
+      "1. Admin autentica com JWT",
+      "2. PATCH /moderation/roles/{userId} com newRole=moderador",
+      "3. Sistema verifica se admin pode promover (hierarquia)",
+      "4. Cargo atualizado e mudança registrada",
+      "5. Histórico acessível em /moderation/roles/history/{userId}"
+    ],
+    "temporaryBan": [
+      "1. POST /moderation/bans/{userId} com isPermanent=false e expiresInDays=7",
+      "2. Sistema calcula expires_at",
+      "3. Cron job executa expire_temporary_bans() periodicamente",
+      "4. Após 7 dias, banimento desativado automaticamente"
+    ]
+  },
+  "bestPractices": [
+    "Sempre forneça motivos claros e detalhados para banimentos (mínimo 10 caracteres)",
+    "Use banimentos temporários para infrações leves",
+    "Revise histórico antes de aplicar novos banimentos",
+    "Documente promoções de cargo com motivos transparentes",
+    "Configure cron job para expirar banimentos temporários",
+    "Master deve ser atribuído apenas ao fundador/owner do fórum",
+    "Limite número de Admins para melhor controle",
+    "Promova gradualmente: usuario → uploader → suporte → moderador"
+  ],
+  "notes": [
+    "Usuários banidos não podem fazer login (implementar verificação no auth-middleware se necessário)",
+    "is_banned é sincronizado automaticamente via trigger SQL",
+    "Banimentos temporários expiram automaticamente se cron job estiver configurado",
+    "Todo histórico de moderação é preservado permanentemente",
+    "IP e user-agent são capturados automaticamente das requisições",
+    "Master pode reverter qualquer ação de qualquer moderador/admin",
+    "Sistema impede auto-promoção e ações em usuários de mesmo cargo"
+  ]
+}

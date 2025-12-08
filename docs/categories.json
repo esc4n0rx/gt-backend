@@ -1,0 +1,613 @@
+{
+  "feature": "Category Management System",
+  "description": "Sistema hierárquico de categorias e subcategorias para organização do fórum. Suporta até 3 níveis de profundidade (Categoria > Subcategoria > Sub-subcategoria > Threads). Master e Admin podem criar, editar, reorganizar e bloquear categorias.",
+  "baseUrl": "/api/v1/categories",
+  "hierarchy": {
+    "description": "Estrutura em árvore com até 3 níveis",
+    "levels": {
+      "0": "Categoria Principal (raiz)",
+      "1": "Subcategoria",
+      "2": "Sub-subcategoria (nível máximo)"
+    },
+    "example": "Social > Notícias > Tecnologia > [Threads aqui]"
+  },
+  "routes": [
+    {
+      "name": "Obter Árvore Completa de Categorias",
+      "method": "GET",
+      "path": "/tree",
+      "description": "Retorna toda a estrutura hierárquica de categorias em formato de árvore",
+      "authentication": "Public",
+      "response": {
+        "success": true,
+        "data": {
+          "tree": [
+            {
+              "id": "uuid",
+              "name": "Social",
+              "slug": "social",
+              "description": "string | null",
+              "parent_id": null,
+              "display_order": 0,
+              "is_locked": false,
+              "icon": "👥",
+              "level": 0,
+              "thread_count": 0,
+              "post_count": 0,
+              "children": [
+                {
+                  "id": "uuid",
+                  "name": "Notícias",
+                  "slug": "noticias",
+                  "description": "string | null",
+                  "parent_id": "uuid",
+                  "display_order": 0,
+                  "is_locked": false,
+                  "icon": null,
+                  "level": 1,
+                  "thread_count": 5,
+                  "post_count": 23,
+                  "children": [
+                    {
+                      "id": "uuid",
+                      "name": "Tecnologia",
+                      "slug": "tecnologia",
+                      "description": "string | null",
+                      "parent_id": "uuid",
+                      "display_order": 0,
+                      "is_locked": false,
+                      "icon": null,
+                      "level": 2,
+                      "thread_count": 12,
+                      "post_count": 45,
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "totalCategories": 120
+        }
+      }
+    },
+    {
+      "name": "Listar Categorias Raiz",
+      "method": "GET",
+      "path": "/root",
+      "description": "Retorna apenas as categorias principais (nível 0)",
+      "authentication": "Public",
+      "response": {
+        "success": true,
+        "data": {
+          "categories": [
+            {
+              "id": "uuid",
+              "name": "Social",
+              "slug": "social",
+              "description": "Seção dedicada a Social",
+              "parent_id": null,
+              "display_order": 0,
+              "is_locked": false,
+              "icon": "👥",
+              "level": 0,
+              "thread_count": 0,
+              "post_count": 0,
+              "last_thread_id": null,
+              "last_post_at": null,
+              "created_at": "timestamp",
+              "updated_at": "timestamp"
+            }
+          ],
+          "count": 6
+        }
+      }
+    },
+    {
+      "name": "Listar Todas as Categorias (Flat)",
+      "method": "GET",
+      "path": "/",
+      "description": "Retorna todas as categorias em lista plana, ordenadas por nível e ordem de exibição",
+      "authentication": "Public",
+      "response": {
+        "success": true,
+        "data": {
+          "categories": [
+            {
+              "id": "uuid",
+              "name": "string",
+              "slug": "string",
+              "description": "string | null",
+              "parent_id": "uuid | null",
+              "display_order": "number",
+              "is_locked": "boolean",
+              "icon": "string | null",
+              "level": "number",
+              "thread_count": "number",
+              "post_count": "number",
+              "last_thread_id": "uuid | null",
+              "last_post_at": "timestamp | null",
+              "created_at": "timestamp",
+              "updated_at": "timestamp"
+            }
+          ],
+          "count": 120
+        }
+      }
+    },
+    {
+      "name": "Buscar Categoria por Slug",
+      "method": "GET",
+      "path": "/slug/:slug",
+      "description": "Busca uma categoria pelo slug e retorna suas subcategorias diretas",
+      "authentication": "Public",
+      "params": {
+        "slug": "string (slug da categoria)"
+      },
+      "example": "/slug/social",
+      "response": {
+        "success": true,
+        "data": {
+          "category": {
+            "id": "uuid",
+            "name": "Social",
+            "slug": "social",
+            "description": "Seção dedicada a Social",
+            "parent_id": null,
+            "display_order": 0,
+            "is_locked": false,
+            "icon": "👥",
+            "level": 0,
+            "thread_count": 0,
+            "post_count": 0,
+            "last_thread_id": null,
+            "last_post_at": null,
+            "created_at": "timestamp",
+            "updated_at": "timestamp"
+          },
+          "subcategories": [
+            {
+              "id": "uuid",
+              "name": "Notícias",
+              "slug": "noticias",
+              "parent_id": "uuid",
+              "level": 1,
+              "thread_count": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Buscar Categoria por ID",
+      "method": "GET",
+      "path": "/:categoryId",
+      "description": "Busca uma categoria pelo ID e retorna suas subcategorias diretas",
+      "authentication": "Public",
+      "params": {
+        "categoryId": "UUID da categoria"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "category": {
+            "id": "uuid",
+            "name": "string",
+            "slug": "string",
+            "description": "string | null",
+            "parent_id": "uuid | null",
+            "display_order": "number",
+            "is_locked": "boolean",
+            "icon": "string | null",
+            "level": "number",
+            "thread_count": "number",
+            "post_count": "number"
+          },
+          "subcategories": []
+        }
+      }
+    },
+    {
+      "name": "Criar Nova Categoria",
+      "method": "POST",
+      "path": "/",
+      "description": "Cria uma nova categoria ou subcategoria. Máximo de 3 níveis de profundidade.",
+      "authentication": "Required (Admin+)",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "name": "string (2-100 caracteres, obrigatório)",
+        "slug": "string (2-100 caracteres, apenas minúsculas, números e hífens, obrigatório)",
+        "description": "string (máx 1000 caracteres, opcional)",
+        "parentId": "UUID (opcional, null para categoria raiz)",
+        "displayOrder": "number (ordem de exibição, opcional, default: 0)",
+        "isLocked": "boolean (impede criação de threads, opcional, default: false)",
+        "icon": "string (emoji ou código, máx 50 caracteres, opcional)"
+      },
+      "example": {
+        "name": "Tecnologia",
+        "slug": "tecnologia",
+        "description": "Discussões sobre tecnologia e inovação",
+        "parentId": null,
+        "displayOrder": 0,
+        "isLocked": false,
+        "icon": "💻"
+      },
+      "validations": {
+        "name": "2-100 caracteres",
+        "slug": "Único no sistema, apenas letras minúsculas, números e hífens",
+        "parentId": "Deve existir e não pode criar mais de 2 níveis de profundidade",
+        "level": "Máximo 2 níveis de subcategorias"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "category": {
+            "id": "uuid",
+            "name": "Tecnologia",
+            "slug": "tecnologia",
+            "description": "Discussões sobre tecnologia e inovação",
+            "parent_id": null,
+            "display_order": 0,
+            "is_locked": false,
+            "icon": "💻",
+            "level": 0,
+            "thread_count": 0,
+            "post_count": 0,
+            "created_at": "timestamp",
+            "updated_at": "timestamp"
+          },
+          "message": "Categoria criada com sucesso"
+        }
+      }
+    },
+    {
+      "name": "Atualizar Categoria",
+      "method": "PATCH",
+      "path": "/:categoryId",
+      "description": "Atualiza informações de uma categoria existente",
+      "authentication": "Required (Admin+)",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "params": {
+        "categoryId": "UUID da categoria"
+      },
+      "body": {
+        "name": "string (opcional)",
+        "slug": "string (opcional)",
+        "description": "string (opcional)",
+        "displayOrder": "number (opcional)",
+        "isLocked": "boolean (opcional)",
+        "icon": "string (opcional)"
+      },
+      "example": {
+        "name": "Tecnologia & Inovação",
+        "description": "Discussões sobre tecnologia, inovação e futuro",
+        "icon": "🚀"
+      },
+      "validations": {
+        "atLeastOneField": "Pelo menos um campo deve ser fornecido",
+        "slug": "Se fornecido, deve ser único"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "category": {
+            "id": "uuid",
+            "name": "Tecnologia & Inovação",
+            "slug": "tecnologia",
+            "description": "Discussões sobre tecnologia, inovação e futuro",
+            "icon": "🚀",
+            "updated_at": "timestamp"
+          },
+          "message": "Categoria atualizada com sucesso"
+        }
+      }
+    },
+    {
+      "name": "Deletar Categoria",
+      "method": "DELETE",
+      "path": "/:categoryId",
+      "description": "Deleta uma categoria. Falha se houver threads ou subcategorias.",
+      "authentication": "Required (Admin+)",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "params": {
+        "categoryId": "UUID da categoria"
+      },
+      "validations": {
+        "noThreads": "Categoria não pode ter threads existentes",
+        "noSubcategories": "Categoria não pode ter subcategorias"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "message": "Categoria deletada com sucesso"
+        }
+      },
+      "errors": {
+        "hasThreads": {
+          "success": false,
+          "error": {
+            "message": "Não é possível deletar categoria com 15 thread(s) existente(s)",
+            "code": "BAD_REQUEST"
+          }
+        },
+        "hasSubcategories": {
+          "success": false,
+          "error": {
+            "message": "Não é possível deletar categoria com subcategorias. Delete as subcategorias primeiro.",
+            "code": "BAD_REQUEST"
+          }
+        }
+      }
+    },
+    {
+      "name": "Reordenar Categorias",
+      "method": "PUT",
+      "path": "/reorder",
+      "description": "Atualiza a ordem de exibição de múltiplas categorias simultaneamente",
+      "authentication": "Required (Admin+)",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "categories": [
+          {
+            "id": "UUID da categoria",
+            "displayOrder": "number (nova ordem)"
+          }
+        ]
+      },
+      "example": {
+        "categories": [
+          {
+            "id": "uuid-1",
+            "displayOrder": 0
+          },
+          {
+            "id": "uuid-2",
+            "displayOrder": 1
+          },
+          {
+            "id": "uuid-3",
+            "displayOrder": 2
+          }
+        ]
+      },
+      "validations": {
+        "minCategories": "Deve fornecer pelo menos uma categoria",
+        "validIds": "Todos os IDs devem ser UUIDs válidos",
+        "positiveOrder": "Ordem deve ser número positivo"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "message": "Categorias reordenadas com sucesso",
+          "updated": 3
+        }
+      }
+    },
+    {
+      "name": "Bloquear/Desbloquear Categoria",
+      "method": "PATCH",
+      "path": "/:categoryId/toggle-lock",
+      "description": "Alterna o status de bloqueio de uma categoria. Quando bloqueada, novos threads não podem ser criados.",
+      "authentication": "Required (Admin+)",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "params": {
+        "categoryId": "UUID da categoria"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "category": {
+            "id": "uuid",
+            "name": "string",
+            "is_locked": true,
+            "updated_at": "timestamp"
+          },
+          "message": "Categoria bloqueada. Novos threads não podem ser criados."
+        }
+      }
+    }
+  ],
+  "errorResponses": {
+    "400": {
+      "description": "Bad Request - Validação falhou",
+      "examples": [
+        {
+          "success": false,
+          "error": {
+            "message": "Não é permitido criar subcategorias além do nível 2",
+            "code": "BAD_REQUEST"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Não é possível deletar categoria com 15 thread(s) existente(s)",
+            "code": "BAD_REQUEST"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Pelo menos um campo deve ser fornecido para atualização",
+            "code": "BAD_REQUEST"
+          }
+        }
+      ]
+    },
+    "401": {
+      "description": "Unauthorized - Token inválido",
+      "example": {
+        "success": false,
+        "error": {
+          "message": "Token inválido ou expirado",
+          "code": "UNAUTHORIZED"
+        }
+      }
+    },
+    "403": {
+      "description": "Forbidden - Sem permissão (apenas Admin/Master)",
+      "example": {
+        "success": false,
+        "error": {
+          "message": "Acesso restrito. Cargos permitidos: admin, master",
+          "code": "FORBIDDEN"
+        }
+      }
+    },
+    "404": {
+      "description": "Not Found - Categoria não encontrada",
+      "example": {
+        "success": false,
+        "error": {
+          "message": "Categoria não encontrada",
+          "code": "NOT_FOUND"
+        }
+      }
+    },
+    "409": {
+      "description": "Conflict - Slug já existe",
+      "example": {
+        "success": false,
+        "error": {
+          "message": "Slug já está em uso",
+          "code": "CONFLICT"
+        }
+      }
+    }
+  },
+  "security": {
+    "publicRoutes": [
+      "GET /tree",
+      "GET /root",
+      "GET /",
+      "GET /slug/:slug",
+      "GET /:categoryId"
+    ],
+    "adminRoutes": [
+      "POST /",
+      "PATCH /:categoryId",
+      "DELETE /:categoryId",
+      "PUT /reorder",
+      "PATCH /:categoryId/toggle-lock"
+    ],
+    "authentication": "JWT Bearer Token com verificação de cargo Admin ou Master",
+    "validation": "Zod schemas para todos os inputs",
+    "sqlProtection": "Triggers SQL impedem exclusão de categorias com conteúdo"
+  },
+  "database": {
+    "tables": [
+      "categories (id, name, slug, description, parent_id, display_order, is_locked, icon, level, thread_count, post_count, last_thread_id, last_post_at)"
+    ],
+    "migrations": [
+      "004_categories_system.sql"
+    ],
+    "functions": [
+      "calculate_category_level(category_id) - Calcula nível da categoria na árvore",
+      "get_category_tree() - Retorna árvore completa de categorias",
+      "get_subcategories(parent_id) - Retorna subcategorias de uma categoria",
+      "prevent_delete_category_with_threads() - Trigger que impede exclusão com threads"
+    ],
+    "triggers": [
+      "validate_category_level - Valida nível antes de inserir/atualizar",
+      "update_category_counters - Atualiza contadores quando threads são criadas/deletadas",
+      "prevent_delete_category_with_threads - Impede exclusão de categorias com conteúdo"
+    ],
+    "constraints": [
+      "Máximo 2 níveis de subcategorias (0, 1, 2)",
+      "Slug único em todo o sistema",
+      "ON DELETE RESTRICT para parent_id (impede deletar categoria com filhos)",
+      "Categoria não pode ser pai de si mesma"
+    ]
+  },
+  "features": {
+    "hierarchy": "Estrutura em árvore com até 3 níveis",
+    "slugs": "URLs amigáveis geradas automaticamente",
+    "locking": "Bloqueio de categorias para impedir novos threads",
+    "counters": "Contadores automáticos de threads e posts",
+    "ordering": "Sistema de ordenação customizável",
+    "icons": "Suporte a emojis e ícones para categorias",
+    "validation": "Validações SQL e aplicação impedem estruturas inválidas",
+    "protection": "Impossível deletar categorias com conteúdo"
+  },
+  "seedData": {
+    "description": "Dados iniciais para popular o fórum",
+    "file": "docs/seed.json",
+    "script": "scripts/seed-categories.ts",
+    "usage": [
+      "1. Execute a migração: 004_categories_system.sql",
+      "2. Execute o script de seed: npx ts-node scripts/seed-categories.ts",
+      "3. Verifique as categorias criadas via GET /categories/tree"
+    ],
+    "categories": [
+      "Social (Notícias, Novidades, Cargos Abertos, Apresentações)",
+      "GTracker (Filmes, Séries, Jogos, Softwares)",
+      "Comunidade (Filmes, Séries, Jogos, Criadores de Conteúdo)",
+      "Suporte (Suporte Técnico, Tutoriais, Sugestões)",
+      "Entretenimento (Músicas, Animes & Mangás, Livros & HQs)",
+      "Off-Topic (Conversas Gerais, Tecnologia, Humor, Marketplace)"
+    ]
+  },
+  "bestPractices": [
+    "Use slugs descritivos e únicos",
+    "Organize conteúdo em no máximo 3 níveis",
+    "Bloqueie categorias temporariamente durante manutenção",
+    "Delete threads antes de deletar categorias",
+    "Use ícones para facilitar navegação visual",
+    "Mantenha ordem lógica nas categorias principais",
+    "Agrupe conteúdo relacionado em subcategorias",
+    "Evite criar muitas categorias raiz (máximo 6-8 recomendado)"
+  ],
+  "exampleFlows": {
+    "createCategory": [
+      "1. Admin autentica com JWT",
+      "2. POST /categories com name, slug, description",
+      "3. Sistema valida slug único e nível máximo",
+      "4. Categoria criada com level calculado automaticamente",
+      "5. Retorna categoria completa com ID"
+    ],
+    "createSubcategory": [
+      "1. POST /categories com parentId definido",
+      "2. Sistema verifica se categoria pai existe",
+      "3. Sistema valida que não excede nível 2",
+      "4. Subcategoria criada com level = parent.level + 1",
+      "5. Aparece na árvore sob a categoria pai"
+    ],
+    "deleteCategory": [
+      "1. DELETE /categories/:id",
+      "2. Sistema verifica se tem subcategorias",
+      "3. Sistema verifica se tem threads (via trigger SQL)",
+      "4. Se tudo OK, categoria deletada",
+      "5. Se tiver conteúdo, retorna erro 400"
+    ],
+    "viewTree": [
+      "1. Frontend faz GET /categories/tree",
+      "2. Sistema executa função SQL get_category_tree()",
+      "3. Retorna estrutura hierárquica completa",
+      "4. Frontend renderiza árvore navegável",
+      "5. Usuário clica e navega pelas categorias"
+    ]
+  },
+  "notes": [
+    "Categorias bloqueadas (is_locked=true) impedem criação de novos threads",
+    "Contadores (thread_count, post_count) são atualizados automaticamente via triggers",
+    "Slugs devem ser únicos em todo o sistema, não apenas por nível",
+    "Sistema usa adjacency list para hierarquia (parent_id)",
+    "Função SQL get_category_tree() constrói árvore recursivamente",
+    "Máximo de 2 níveis de subcategorias é validado em SQL e aplicação",
+    "Ícones são opcionais e suportam emojis Unicode",
+    "Ordem de exibição pode ser customizada via display_order"
+  ]
+}

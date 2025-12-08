@@ -102,6 +102,21 @@ export class ProfileRepository {
     return this.mapToProfile(data);
   }
 
+  async updateRole(userId: string, role: string): Promise<Profile> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ role })
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Falha ao atualizar cargo: ${error?.message}`);
+    }
+
+    return this.mapToProfile(data);
+  }
+
   private mapToProfile(row: ProfileRow): Profile {
     return {
       id: row.id,
