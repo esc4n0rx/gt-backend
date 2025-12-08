@@ -76,6 +76,20 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['system_settings']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['system_settings']['Insert']>;
       };
+      verification_codes: {
+        Row: {
+          id: string;
+          user_id: string;
+          code: string;
+          type: 'email_change' | 'password_change';
+          new_value: string;
+          expires_at: string;
+          is_used: boolean;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['verification_codes']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['verification_codes']['Insert']>;
+      };
     };
   };
 }

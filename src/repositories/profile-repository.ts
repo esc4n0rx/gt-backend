@@ -42,6 +42,66 @@ export class ProfileRepository {
     return this.mapToProfile(profile);
   }
 
+  async updateAvatar(userId: string, avatarUrl: string): Promise<Profile> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ avatar_url: avatarUrl })
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Falha ao atualizar avatar: ${error?.message}`);
+    }
+
+    return this.mapToProfile(data);
+  }
+
+  async updateBanner(userId: string, bannerUrl: string): Promise<Profile> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ banner_url: bannerUrl })
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Falha ao atualizar banner: ${error?.message}`);
+    }
+
+    return this.mapToProfile(data);
+  }
+
+  async updateSignature(userId: string, signatureUrl: string): Promise<Profile> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ signature: signatureUrl })
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Falha ao atualizar assinatura: ${error?.message}`);
+    }
+
+    return this.mapToProfile(data);
+  }
+
+  async updateBio(userId: string, bio: string): Promise<Profile> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ bio })
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Falha ao atualizar bio: ${error?.message}`);
+    }
+
+    return this.mapToProfile(data);
+  }
+
   private mapToProfile(row: ProfileRow): Profile {
     return {
       id: row.id,

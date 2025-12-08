@@ -80,6 +80,53 @@ export class UserRepository {
     return this.mapToUser(user);
   }
 
+  async updateName(userId: string, name: string): Promise<User> {
+    const { data, error } = await supabase
+      .from('users')
+      .update({ name } as any)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Falha ao atualizar nome: ${error?.message}`);
+    }
+
+    return this.mapToUser(data);
+  }
+
+  async updateEmail(userId: string, email: string): Promise<User> {
+    const { data, error } = await supabase
+      .from('users')
+      .update({ email } as any)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Falha ao atualizar email: ${error?.message}`);
+    }
+
+    return this.mapToUser(data);
+  }
+
+  async updatePassword(userId: string, newPassword: string): Promise<User> {
+    const passwordHash = await hashPassword(newPassword);
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({ password_hash: passwordHash } as any)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Falha ao atualizar senha: ${error?.message}`);
+    }
+
+    return this.mapToUser(data);
+  }
+
   private mapToUser(row: UserRow): User {
     return {
       id: row.id,

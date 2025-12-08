@@ -1,0 +1,553 @@
+{
+  "feature": "Profile Management",
+  "description": "Sistema completo de personalização de perfil com upload de imagens via Cloudinary e alteração de credenciais com verificação via email (Resend)",
+  "baseUrl": "/api/v1/profile",
+  "authentication": "Todas as rotas requerem Bearer Token JWT no header Authorization",
+  "routes": [
+    {
+      "name": "Obter Perfil",
+      "method": "GET",
+      "path": "/",
+      "description": "Retorna informações do perfil e usuário autenticado",
+      "authentication": "Required",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "user": {
+            "id": "uuid",
+            "username": "string",
+            "name": "string",
+            "email": "string",
+            "invite_code_used": "string | null",
+            "created_at": "timestamp",
+            "updated_at": "timestamp"
+          },
+          "profile": {
+            "id": "uuid",
+            "user_id": "uuid",
+            "avatar_url": "string",
+            "banner_url": "string",
+            "bio": "string",
+            "signature": "string",
+            "total_posts": "number",
+            "total_likes": "number",
+            "ranking": "number",
+            "level": "number",
+            "role": "usuario | moderador | admin | vip",
+            "is_banned": "boolean",
+            "created_at": "timestamp",
+            "updated_at": "timestamp"
+          }
+        }
+      }
+    },
+    {
+      "name": "Atualizar Perfil",
+      "method": "PATCH",
+      "path": "/",
+      "description": "Atualiza nome e/ou bio do usuário",
+      "authentication": "Required",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "name": "string (opcional, 2-100 caracteres)",
+        "bio": "string (opcional, máx 500 caracteres)"
+      },
+      "example": {
+        "name": "João Silva",
+        "bio": "Desenvolvedor full-stack apaixonado por tecnologia"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "user": {
+            "id": "uuid",
+            "username": "joaosilva",
+            "name": "João Silva",
+            "email": "joao@example.com",
+            "created_at": "timestamp",
+            "updated_at": "timestamp"
+          },
+          "profile": {
+            "id": "uuid",
+            "user_id": "uuid",
+            "bio": "Desenvolvedor full-stack apaixonado por tecnologia",
+            "avatar_url": "string",
+            "banner_url": "string",
+            "signature": "string",
+            "total_posts": 0,
+            "total_likes": 0,
+            "ranking": 0,
+            "level": 0,
+            "role": "usuario",
+            "is_banned": false,
+            "created_at": "timestamp",
+            "updated_at": "timestamp"
+          }
+        },
+        "message": "Perfil atualizado com sucesso"
+      }
+    },
+    {
+      "name": "Upload de Avatar",
+      "method": "POST",
+      "path": "/avatar",
+      "description": "Faz upload de uma imagem de avatar (substitui a anterior)",
+      "authentication": "Required",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "multipart/form-data"
+      },
+      "body": {
+        "file": "File (imagem, máx 5MB)"
+      },
+      "validations": {
+        "type": "Apenas imagens (image/*)",
+        "maxSize": "5MB",
+        "formats": "PNG, JPG, JPEG, WebP, etc"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "profile": {
+            "id": "uuid",
+            "user_id": "uuid",
+            "avatar_url": "https://res.cloudinary.com/gtracker/image/upload/...",
+            "banner_url": "string",
+            "bio": "string",
+            "signature": "string",
+            "total_posts": 0,
+            "total_likes": 0,
+            "ranking": 0,
+            "level": 0,
+            "role": "usuario",
+            "is_banned": false,
+            "created_at": "timestamp",
+            "updated_at": "timestamp"
+          }
+        },
+        "message": "Avatar atualizado com sucesso"
+      }
+    },
+    {
+      "name": "Upload de Banner",
+      "method": "POST",
+      "path": "/banner",
+      "description": "Faz upload de uma imagem de banner (substitui a anterior)",
+      "authentication": "Required",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "multipart/form-data"
+      },
+      "body": {
+        "file": "File (imagem, máx 10MB)"
+      },
+      "validations": {
+        "type": "Apenas imagens (image/*)",
+        "maxSize": "10MB",
+        "formats": "PNG, JPG, JPEG, WebP, etc"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "profile": {
+            "id": "uuid",
+            "user_id": "uuid",
+            "avatar_url": "string",
+            "banner_url": "https://res.cloudinary.com/gtracker/image/upload/...",
+            "bio": "string",
+            "signature": "string",
+            "total_posts": 0,
+            "total_likes": 0,
+            "ranking": 0,
+            "level": 0,
+            "role": "usuario",
+            "is_banned": false,
+            "created_at": "timestamp",
+            "updated_at": "timestamp"
+          }
+        },
+        "message": "Banner atualizado com sucesso"
+      }
+    },
+    {
+      "name": "Upload de Assinatura",
+      "method": "POST",
+      "path": "/signature",
+      "description": "Faz upload de uma imagem/GIF de assinatura (substitui a anterior)",
+      "authentication": "Required",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "multipart/form-data"
+      },
+      "body": {
+        "file": "File (imagem ou GIF, máx 2MB)"
+      },
+      "validations": {
+        "type": "PNG, JPG, JPEG, GIF",
+        "maxSize": "2MB",
+        "formats": "image/png, image/jpeg, image/jpg, image/gif"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "profile": {
+            "id": "uuid",
+            "user_id": "uuid",
+            "avatar_url": "string",
+            "banner_url": "string",
+            "bio": "string",
+            "signature": "https://res.cloudinary.com/gtracker/image/upload/...",
+            "total_posts": 0,
+            "total_likes": 0,
+            "ranking": 0,
+            "level": 0,
+            "role": "usuario",
+            "is_banned": false,
+            "created_at": "timestamp",
+            "updated_at": "timestamp"
+          }
+        },
+        "message": "Assinatura atualizada com sucesso"
+      }
+    },
+    {
+      "name": "Remover Assinatura",
+      "method": "DELETE",
+      "path": "/signature",
+      "description": "Remove a assinatura do perfil",
+      "authentication": "Required",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "profile": {
+            "id": "uuid",
+            "user_id": "uuid",
+            "avatar_url": "string",
+            "banner_url": "string",
+            "bio": "string",
+            "signature": "",
+            "total_posts": 0,
+            "total_likes": 0,
+            "ranking": 0,
+            "level": 0,
+            "role": "usuario",
+            "is_banned": false,
+            "created_at": "timestamp",
+            "updated_at": "timestamp"
+          }
+        },
+        "message": "Assinatura removida com sucesso"
+      }
+    },
+    {
+      "name": "Solicitar Alteração de Email",
+      "method": "POST",
+      "path": "/email/request",
+      "description": "Solicita alteração de email (envia código de verificação de 6 dígitos para o novo email)",
+      "authentication": "Required",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "newEmail": "string (email válido)",
+        "password": "string (senha atual para confirmar identidade)"
+      },
+      "example": {
+        "newEmail": "novoemail@example.com",
+        "password": "senha123"
+      },
+      "validations": {
+        "newEmail": "Deve ser um email válido e não estar em uso",
+        "password": "Deve ser a senha atual correta"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "message": "Código de verificação enviado para o novo email"
+        }
+      },
+      "notes": [
+        "Código expira em 15 minutos",
+        "Código pode ser usado apenas uma vez",
+        "Email HTML estilizado é enviado via Resend",
+        "Códigos pendentes anteriores são deletados ao solicitar novo"
+      ]
+    },
+    {
+      "name": "Confirmar Alteração de Email",
+      "method": "POST",
+      "path": "/email/confirm",
+      "description": "Confirma alteração de email usando o código recebido",
+      "authentication": "Required",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "code": "string (6 dígitos)"
+      },
+      "example": {
+        "code": "123456"
+      },
+      "validations": {
+        "code": "Deve ser válido, não expirado e não usado"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "user": {
+            "id": "uuid",
+            "username": "string",
+            "name": "string",
+            "email": "novoemail@example.com",
+            "created_at": "timestamp",
+            "updated_at": "timestamp"
+          },
+          "message": "Email atualizado com sucesso"
+        }
+      }
+    },
+    {
+      "name": "Solicitar Alteração de Senha",
+      "method": "POST",
+      "path": "/password/request",
+      "description": "Solicita alteração de senha (envia código de verificação de 6 dígitos para o email atual)",
+      "authentication": "Required",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "currentPassword": "string (senha atual)",
+        "newPassword": "string (nova senha, 6-100 caracteres)"
+      },
+      "example": {
+        "currentPassword": "senha123",
+        "newPassword": "novaSenha456"
+      },
+      "validations": {
+        "currentPassword": "Deve ser a senha atual correta",
+        "newPassword": "Deve ter entre 6 e 100 caracteres"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "message": "Código de verificação enviado para seu email"
+        }
+      },
+      "notes": [
+        "Código expira em 15 minutos",
+        "Código pode ser usado apenas uma vez",
+        "Email HTML estilizado é enviado via Resend",
+        "Códigos pendentes anteriores são deletados ao solicitar novo"
+      ]
+    },
+    {
+      "name": "Confirmar Alteração de Senha",
+      "method": "POST",
+      "path": "/password/confirm",
+      "description": "Confirma alteração de senha usando o código recebido",
+      "authentication": "Required",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "code": "string (6 dígitos)"
+      },
+      "example": {
+        "code": "123456"
+      },
+      "validations": {
+        "code": "Deve ser válido, não expirado e não usado"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "message": "Senha atualizada com sucesso"
+        }
+      },
+      "notes": [
+        "Após alterar senha, recomenda-se fazer logout e login novamente",
+        "Tokens JWT antigos continuam válidos até expiração"
+      ]
+    }
+  ],
+  "errorResponses": {
+    "400": {
+      "description": "Bad Request - Validação falhou",
+      "examples": [
+        {
+          "success": false,
+          "error": {
+            "message": "Nenhum arquivo enviado",
+            "code": "BAD_REQUEST"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Apenas imagens são permitidas",
+            "code": "BAD_REQUEST"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Código inválido ou expirado",
+            "code": "BAD_REQUEST"
+          }
+        }
+      ]
+    },
+    "401": {
+      "description": "Unauthorized - Token inválido ou senha incorreta",
+      "examples": [
+        {
+          "success": false,
+          "error": {
+            "message": "Token inválido ou expirado",
+            "code": "UNAUTHORIZED"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Senha incorreta",
+            "code": "UNAUTHORIZED"
+          }
+        }
+      ]
+    },
+    "404": {
+      "description": "Not Found - Recurso não encontrado",
+      "example": {
+        "success": false,
+        "error": {
+          "message": "Perfil não encontrado",
+          "code": "NOT_FOUND"
+        }
+      }
+    },
+    "409": {
+      "description": "Conflict - Recurso já existe",
+      "example": {
+        "success": false,
+        "error": {
+          "message": "Este email já está em uso",
+          "code": "CONFLICT"
+        }
+      }
+    }
+  },
+  "security": {
+    "authentication": "JWT Bearer Token",
+    "passwordHashing": "bcrypt com 12 rounds",
+    "fileValidation": "Tipo MIME e tamanho verificados antes do upload",
+    "emailVerification": "Código de 6 dígitos numéricos aleatórios",
+    "codeExpiration": "15 minutos",
+    "oldImagesDeletion": "Imagens antigas no Cloudinary são deletadas ao fazer upload de novas"
+  },
+  "cloudinary": {
+    "folders": {
+      "avatars": "gtracker/avatars",
+      "banners": "gtracker/banners",
+      "signatures": "gtracker/signatures"
+    },
+    "naming": "tipo_userId_timestamp (ex: avatar_uuid_1234567890)",
+    "optimizations": [
+      "quality: auto:good",
+      "fetch_format: auto"
+    ],
+    "metadata": "Cada imagem é vinculada ao userId via context"
+  },
+  "resend": {
+    "templates": "HTML estilizado com gradientes e design moderno",
+    "emailTypes": [
+      "email_change - Código para alteração de email",
+      "password_change - Código para alteração de senha"
+    ],
+    "from": "Configurável via EMAIL_FROM (.env)"
+  },
+  "database": {
+    "tables": [
+      "users (id, username, name, email, password_hash)",
+      "profiles (id, user_id, avatar_url, banner_url, bio, signature, stats, role)",
+      "verification_codes (id, user_id, code, type, new_value, expires_at, is_used)"
+    ],
+    "migrations": [
+      "001_create_users_and_profiles.sql",
+      "002_create_verification_codes.sql"
+    ]
+  },
+  "restrictions": {
+    "readOnly": [
+      "ranking - Apenas sistema pode alterar",
+      "role - Apenas admin pode alterar",
+      "level - Apenas sistema pode alterar",
+      "total_posts - Atualizado automaticamente",
+      "total_likes - Atualizado automaticamente",
+      "is_banned - Apenas admin pode alterar"
+    ],
+    "userCanModify": [
+      "name - Via PATCH /profile",
+      "bio - Via PATCH /profile",
+      "avatar_url - Via POST /profile/avatar",
+      "banner_url - Via POST /profile/banner",
+      "signature - Via POST /profile/signature",
+      "email - Via fluxo de verificação (/email/request + /email/confirm)",
+      "password - Via fluxo de verificação (/password/request + /password/confirm)"
+    ]
+  },
+  "setup": {
+    "dependencies": [
+      "cloudinary@2.8.0",
+      "resend@6.5.2",
+      "multer@2.0.2",
+      "@types/multer@2.0.0"
+    ],
+    "environmentVariables": [
+      "CLOUDINARY_CLOUD_NAME",
+      "CLOUDINARY_API_KEY",
+      "CLOUDINARY_API_SECRET",
+      "RESEND_API_KEY",
+      "EMAIL_FROM"
+    ],
+    "runMigrations": [
+      "Execute 001_create_users_and_profiles.sql",
+      "Execute 002_create_verification_codes.sql"
+    ]
+  },
+  "exampleFlows": {
+    "changeEmail": [
+      "1. POST /profile/email/request com { newEmail, password }",
+      "2. Usuário recebe email com código de 6 dígitos",
+      "3. POST /profile/email/confirm com { code }",
+      "4. Email atualizado com sucesso"
+    ],
+    "changePassword": [
+      "1. POST /profile/password/request com { currentPassword, newPassword }",
+      "2. Usuário recebe email com código de 6 dígitos",
+      "3. POST /profile/password/confirm com { code }",
+      "4. Senha atualizada com sucesso"
+    ],
+    "updateAvatar": [
+      "1. POST /profile/avatar com FormData contendo 'file'",
+      "2. Arquivo validado (tipo e tamanho)",
+      "3. Avatar antigo deletado do Cloudinary",
+      "4. Novo avatar enviado ao Cloudinary",
+      "5. URL atualizada no banco de dados",
+      "6. Retorna perfil atualizado"
+    ]
+  }
+}

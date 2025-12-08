@@ -12,6 +12,13 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   DEFAULT_AVATAR_URL: z.string().url().default('https://gtracker.com/assets/default-avatar.png'),
   DEFAULT_BANNER_URL: z.string().url().default('https://gtracker.com/assets/default-banner.png'),
+  // Cloudinary
+  CLOUDINARY_CLOUD_NAME: z.string().min(1, 'CLOUDINARY_CLOUD_NAME é obrigatória'),
+  CLOUDINARY_API_KEY: z.string().min(1, 'CLOUDINARY_API_KEY é obrigatória'),
+  CLOUDINARY_API_SECRET: z.string().min(1, 'CLOUDINARY_API_SECRET é obrigatória'),
+  // Resend
+  RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY é obrigatória'),
+  EMAIL_FROM: z.string().email('EMAIL_FROM deve ser um email válido').default('noreply@gtracker.com'),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
