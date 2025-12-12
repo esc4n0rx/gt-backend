@@ -1,0 +1,518 @@
+{
+  "feature": "External API Integration (TMDB & Steam)",
+  "description": "Sistema de integração com APIs externas (TMDB para filmes/séries e Steam para jogos). Inclui cache automático de 30 dias para evitar chamadas repetidas às APIs. Steam usa algoritmo de Levenshtein para busca fuzzy de jogos.",
+  "baseUrl": "/api/v1/external",
+  "apis": {
+    "tmdb": {
+      "name": "The Movie Database (TMDB)",
+      "description": "API para buscar informações de filmes e séries",
+      "requiresApiKey": true,
+      "envVar": "TMDB_API_KEY",
+      "cacheEnabled": true,
+      "cacheExpirationDays": 30,
+      "returnedFields": [
+        "tmdb_id (string)",
+        "nome_conteudo (string)",
+        "poster_url (url)",
+        "genero (array)",
+        "trailer_url (url)",
+        "elenco (array, top 10 atores)",
+        "sinopse (string)",
+        "ano (number)",
+        "duracao (string, ex: '2h 46min')",
+        "classificacao (string, ex: '12', 'Livre')",
+        "tipo (movie | tv)"
+      ]
+    },
+    "steam": {
+      "name": "Steam Store API",
+      "description": "API para buscar informações de jogos da Steam. Usa algoritmo de Levenshtein para matching fuzzy contra lista local de 150k+ jogos.",
+      "requiresApiKey": false,
+      "localData": "data/appid.json (lista de todos os jogos Steam)",
+      "cacheEnabled": true,
+      "cacheExpirationDays": 30,
+      "levenshteinThreshold": 0.6,
+      "returnedFields": [
+        "steam_appid (string)",
+        "nome (string)",
+        "estilo (array, gêneros do jogo)",
+        "poster_url (url, header image)",
+        "ano (number)",
+        "sistema_operacional (array, ex: ['Windows', 'Mac', 'Linux'])",
+        "descricao (string)",
+        "specs_minimas (string, HTML removido)",
+        "specs_recomendadas (string, HTML removido)",
+        "desenvolvedor (string)",
+        "publisher (string)"
+      ]
+    }
+  },
+  "routes": [
+    {
+      "name": "Buscar Conteúdo TMDB por Nome",
+      "method": "GET",
+      "path": "/tmdb/search",
+      "description": "Busca filme ou série na TMDB pelo nome. Retorna dados formatados prontos para usar no template 'midia' das threads.",
+      "authentication": "Public",
+      "queryParams": {
+        "query": "string - Nome do filme/série para buscar (obrigatório)",
+        "type": "movie | tv - Tipo de conteúdo (opcional, default: movie)"
+      },
+      "example": "/api/v1/external/tmdb/search?query=Inception&type=movie",
+      "response": {
+        "success": true,
+        "data": {
+          "content": {
+            "tmdb_id": "27205",
+            "nome_conteudo": "A Origem",
+            "poster_url": "https://image.tmdb.org/t/p/original/xxx.jpg",
+            "genero": ["Ação", "Ficção científica", "Aventura"],
+            "trailer_url": "https://www.youtube.com/watch?v=YoHD9XEInc0",
+            "elenco": [
+              "Leonardo DiCaprio",
+              "Joseph Gordon-Levitt",
+              "Elliot Page",
+              "Tom Hardy",
+              "Ken Watanabe"
+            ],
+            "sinopse": "Dom Cobb é um ladrão com a rara habilidade de roubar segredos do inconsciente...",
+            "ano": 2010,
+            "duracao": "2h 28min",
+            "classificacao": "12",
+            "tipo": "movie"
+          },
+          "message": "Conteúdo encontrado com sucesso"
+        }
+      },
+      "cache": {
+        "enabled": true,
+        "key": "tmdb:{tmdb_id}",
+        "duration": "30 dias",
+        "behavior": "Primeira busca consulta API, buscas subsequentes retornam do cache"
+      },
+      "errors": {
+        "404": "Nenhum resultado encontrado para esta busca",
+        "500": "Erro ao comunicar com TMDB API"
+      }
+    },
+    {
+      "name": "Buscar Conteúdo TMDB por ID",
+      "method": "GET",
+      "path": "/tmdb/:tmdbId",
+      "description": "Busca filme ou série diretamente pelo TMDB ID",
+      "authentication": "Public",
+      "params": {
+        "tmdbId": "string - ID numérico do TMDB (obrigatório)"
+      },
+      "queryParams": {
+        "type": "movie | tv - Tipo de conteúdo (opcional, default: movie)"
+      },
+      "example": "/api/v1/external/tmdb/27205?type=movie",
+      "response": "Mesmo formato de /tmdb/search",
+      "cache": {
+        "enabled": true,
+        "key": "tmdb:{tmdb_id}",
+        "duration": "30 dias"
+      }
+    },
+    {
+      "name": "Buscar Jogo Steam por Nome",
+      "method": "GET",
+      "path": "/steam/search",
+      "description": "Busca jogo na Steam pelo nome usando algoritmo de Levenshtein. Retorna dados formatados prontos para usar no template 'jogos' das threads.",
+      "authentication": "Public",
+      "queryParams": {
+        "query": "string - Nome do jogo para buscar (obrigatório)"
+      },
+      "example": "/api/v1/external/steam/search?query=Counter-Strike",
+      "howItWorks": [
+        "1. Carrega lista local de 150k+ jogos Steam (data/appid.json)",
+        "2. Calcula similaridade Levenshtein entre query e cada jogo",
+        "3. Retorna melhor match se similaridade > 60%",
+        "4. Busca detalhes completos na Steam API usando App ID encontrado",
+        "5. Formata dados para o template de jogos",
+        "6. Salva no cache por 30 dias"
+      ],
+      "response": {
+        "success": true,
+        "data": {
+          "game": {
+            "steam_appid": "730",
+            "nome": "Counter-Strike 2",
+            "estilo": ["Ação", "FPS"],
+            "poster_url": "https://cdn.akamai.steamstatic.com/steam/apps/730/header.jpg",
+            "ano": 2023,
+            "sistema_operacional": ["Windows", "Linux"],
+            "descricao": "Por mais de duas décadas, a Counter-Strike ofereceu uma experiência competitiva de elite...",
+            "specs_minimas": "SO: Windows 10 CPU: Intel Core i5-750 RAM: 8 GB GPU: NVIDIA GeForce GTX 1060",
+            "specs_recomendadas": "SO: Windows 11 CPU: Intel Core i7-9700K RAM: 16 GB GPU: NVIDIA GeForce RTX 3060",
+            "desenvolvedor": "Valve",
+            "publisher": "Valve"
+          },
+          "message": "Jogo encontrado com sucesso"
+        }
+      },
+      "cache": {
+        "enabled": true,
+        "key": "steam:{app_id}",
+        "duration": "30 dias",
+        "behavior": "Cache salvo após primeira busca bem-sucedida"
+      },
+      "errors": {
+        "404": "Nenhum jogo encontrado para '{query}' (similaridade < 60%)",
+        "500": "Erro ao carregar lista de jogos ou comunicar com Steam API",
+        "429": "Rate limit da Steam atingido. Tente novamente em alguns segundos."
+      },
+      "levenshtein": {
+        "description": "Algoritmo de distância de edição para comparar strings",
+        "threshold": "60% de similaridade mínima",
+        "example": {
+          "query": "Counter Strike",
+          "match": "Counter-Strike 2",
+          "similarity": "95%"
+        }
+      }
+    },
+    {
+      "name": "Buscar Jogo Steam por App ID",
+      "method": "GET",
+      "path": "/steam/:appId",
+      "description": "Busca jogo diretamente pelo Steam App ID",
+      "authentication": "Public",
+      "params": {
+        "appId": "string - App ID numérico da Steam (obrigatório)"
+      },
+      "example": "/api/v1/external/steam/730",
+      "response": "Mesmo formato de /steam/search",
+      "cache": {
+        "enabled": true,
+        "key": "steam:{app_id}",
+        "duration": "30 dias"
+      }
+    },
+    {
+      "name": "Obter Estatísticas do Cache",
+      "method": "GET",
+      "path": "/cache/stats",
+      "description": "Retorna estatísticas de uso do cache por fonte (TMDB e Steam)",
+      "authentication": "Public",
+      "response": {
+        "success": true,
+        "data": {
+          "stats": [
+            {
+              "source": "tmdb",
+              "total_entries": 245,
+              "total_hits": 1523,
+              "avg_hits": 6.21,
+              "oldest_entry": "2024-01-15T10:30:00Z",
+              "newest_entry": "2024-03-20T14:22:00Z"
+            },
+            {
+              "source": "steam",
+              "total_entries": 189,
+              "total_hits": 876,
+              "avg_hits": 4.64,
+              "oldest_entry": "2024-01-18T09:15:00Z",
+              "newest_entry": "2024-03-20T16:45:00Z"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Listar Cache Mais Acessado",
+      "method": "GET",
+      "path": "/cache/most-accessed",
+      "description": "Lista os conteúdos mais acessados do cache (com mais hits)",
+      "authentication": "Public",
+      "queryParams": {
+        "limit": "number - Quantidade de resultados (opcional, default: 20, max: 100)"
+      },
+      "example": "/api/v1/external/cache/most-accessed?limit=10",
+      "response": {
+        "success": true,
+        "data": {
+          "cache": [
+            {
+              "id": "uuid",
+              "source": "tmdb",
+              "external_id": "27205",
+              "search_query": "Inception",
+              "hits": 156,
+              "created_at": "2024-02-15T10:30:00Z",
+              "expires_at": "2024-03-17T10:30:00Z"
+            }
+          ],
+          "count": 10
+        }
+      }
+    },
+    {
+      "name": "Contar Cache por Fonte",
+      "method": "GET",
+      "path": "/cache/count/:source",
+      "description": "Retorna quantidade de entradas válidas no cache para uma fonte específica",
+      "authentication": "Public",
+      "params": {
+        "source": "tmdb | steam - Fonte do cache"
+      },
+      "example": "/api/v1/external/cache/count/tmdb",
+      "response": {
+        "success": true,
+        "data": {
+          "source": "tmdb",
+          "count": 245
+        }
+      }
+    },
+    {
+      "name": "Limpar Cache Expirado",
+      "method": "POST",
+      "path": "/cache/cleanup",
+      "description": "Remove todas as entradas de cache expiradas. Requer permissões de Admin.",
+      "authentication": "Required (Admin+)",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "deletedCount": 42,
+          "message": "42 entradas de cache expiradas foram removidas"
+        }
+      }
+    },
+    {
+      "name": "Deletar Cache Específico",
+      "method": "DELETE",
+      "path": "/cache/:source/:externalId",
+      "description": "Remove uma entrada específica do cache. Requer permissões de Admin.",
+      "authentication": "Required (Admin+)",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "params": {
+        "source": "tmdb | steam - Fonte do cache",
+        "externalId": "string - ID externo (TMDB ID ou Steam App ID)"
+      },
+      "example": "/api/v1/external/cache/tmdb/27205",
+      "response": {
+        "success": true,
+        "data": {
+          "message": "Cache deletado com sucesso"
+        }
+      }
+    }
+  ],
+  "usageExample": {
+    "scenario": "Usuário quer criar thread de filme usando dados do TMDB",
+    "steps": [
+      {
+        "step": 1,
+        "action": "Frontend faz busca no TMDB",
+        "endpoint": "GET /api/v1/external/tmdb/search?query=Inception&type=movie",
+        "result": "Recebe dados completos do filme formatados"
+      },
+      {
+        "step": 2,
+        "action": "Frontend preenche formulário automaticamente",
+        "fields": [
+          "nome_conteudo",
+          "poster_url",
+          "genero",
+          "trailer_url",
+          "elenco",
+          "sinopse",
+          "ano",
+          "duracao",
+          "classificacao",
+          "tmdb_id"
+        ]
+      },
+      {
+        "step": 3,
+        "action": "Usuário adiciona campos obrigatórios restantes",
+        "fields": [
+          "tamanho (ex: '25.4 GB')",
+          "formato (ex: ['MKV', 'HEVC'])",
+          "link_download",
+          "idiomas (ex: ['Português', 'Inglês'])"
+        ]
+      },
+      {
+        "step": 4,
+        "action": "Frontend cria thread",
+        "endpoint": "POST /api/v1/threads",
+        "body": {
+          "categoryId": "uuid-da-categoria",
+          "template": "midia",
+          "title": "A Origem (2010) BluRay 1080p",
+          "content": {
+            "...dados do TMDB...": "...",
+            "...campos adicionados pelo usuário...": "..."
+          }
+        }
+      }
+    ]
+  },
+  "errorResponses": {
+    "400": {
+      "description": "Bad Request - Parâmetros inválidos",
+      "example": {
+        "success": false,
+        "error": {
+          "message": "Query de busca é obrigatória",
+          "code": "BAD_REQUEST"
+        }
+      }
+    },
+    "404": {
+      "description": "Not Found - Conteúdo não encontrado",
+      "examples": [
+        {
+          "success": false,
+          "error": {
+            "message": "Nenhum resultado encontrado para esta busca",
+            "code": "NOT_FOUND"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Nenhum jogo encontrado para \"asdfqwerty\"",
+            "code": "NOT_FOUND"
+          }
+        }
+      ]
+    },
+    "429": {
+      "description": "Rate Limit - Muitas requisições à API externa",
+      "example": {
+        "success": false,
+        "error": {
+          "message": "Rate limit da Steam atingido. Tente novamente em alguns segundos.",
+          "code": "RATE_LIMIT"
+        }
+      }
+    },
+    "500": {
+      "description": "Internal Server Error - Erro na API externa ou cache",
+      "examples": [
+        {
+          "success": false,
+          "error": {
+            "message": "Não foi possível carregar lista de jogos Steam",
+            "code": "INTERNAL_ERROR"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Erro ao comunicar com TMDB API",
+            "code": "INTERNAL_ERROR"
+          }
+        }
+      ]
+    }
+  },
+  "security": {
+    "publicRoutes": [
+      "GET /tmdb/search",
+      "GET /tmdb/:tmdbId",
+      "GET /steam/search",
+      "GET /steam/:appId",
+      "GET /cache/stats",
+      "GET /cache/most-accessed",
+      "GET /cache/count/:source"
+    ],
+    "adminRoutes": [
+      "POST /cache/cleanup",
+      "DELETE /cache/:source/:externalId"
+    ],
+    "apiKeys": {
+      "tmdb": "Configurada via .env (TMDB_API_KEY)",
+      "steam": "Não requer API key"
+    },
+    "rateLimit": {
+      "tmdb": "40 requests/10 segundos (limite da TMDB)",
+      "steam": "200 requests/5 minutos (limite da Steam)",
+      "mitigation": "Cache automático reduz drasticamente chamadas às APIs"
+    }
+  },
+  "database": {
+    "table": "content_cache",
+    "migration": "008_content_cache_system.sql",
+    "columns": [
+      "id (UUID, primary key)",
+      "source (enum: tmdb | steam)",
+      "external_id (string, ID na API externa)",
+      "search_query (string, query original usada na busca)",
+      "content_data (JSONB, dados formatados do conteúdo)",
+      "hits (integer, contador de acessos ao cache)",
+      "created_at (timestamp)",
+      "updated_at (timestamp)",
+      "expires_at (timestamp, default: +30 dias)"
+    ],
+    "indexes": [
+      "idx_content_cache_source",
+      "idx_content_cache_external_id",
+      "idx_content_cache_source_external_id (composite)",
+      "idx_content_cache_search_query",
+      "idx_content_cache_expires_at"
+    ],
+    "functions": [
+      "increment_cache_hits(cache_id) - Incrementa contador de hits",
+      "cleanup_expired_cache() - Remove cache expirado",
+      "get_cache_stats() - Retorna estatísticas por fonte"
+    ],
+    "constraints": [
+      "UNIQUE(source, external_id) - Evita duplicatas",
+      "Expiration automática após 30 dias (configurável)",
+      "CASCADE updates para updated_at"
+    ]
+  },
+  "setup": {
+    "requirements": [
+      "Node.js 18+",
+      "PostgreSQL 14+",
+      "TMDB API Key (obter em https://www.themoviedb.org/settings/api)",
+      "Arquivo data/appid.json (lista de jogos Steam)"
+    ],
+    "installation": [
+      "1. Adicionar TMDB_API_KEY ao .env",
+      "2. Garantir que data/appid.json existe",
+      "3. Executar migration 008_content_cache_system.sql",
+      "4. Reiniciar servidor"
+    ],
+    "maintenance": [
+      "Cache expira automaticamente após 30 dias",
+      "Executar POST /cache/cleanup periodicamente (cronjob recomendado)",
+      "Monitorar estatísticas via GET /cache/stats",
+      "Rate limits das APIs externas são respeitados"
+    ]
+  },
+  "bestPractices": [
+    "Use cache para evitar chamadas repetidas às APIs externas",
+    "Verifique TMDB_API_KEY está configurada antes de usar /tmdb/*",
+    "Steam API é gratuita e não requer API key",
+    "Levenshtein tem threshold de 60% - buscas muito genéricas podem não ter match",
+    "Cache hits são contados automaticamente para estatísticas",
+    "Admin pode limpar cache manualmente se necessário",
+    "Dados retornados estão pré-formatados para templates de threads",
+    "Frontend pode usar esses endpoints para autocompletar formulários",
+    "Rate limits são mitigados pelo cache de 30 dias",
+    "Erros 429 indicam rate limit - espere alguns segundos e tente novamente"
+  ],
+  "relatedEndpoints": {
+    "threads": {
+      "createThread": "POST /api/v1/threads",
+      "description": "Usar dados de /external/tmdb/* ou /external/steam/* para preencher campo 'content'"
+    },
+    "categories": {
+      "listCategories": "GET /api/v1/categories",
+      "description": "Obter categoryId para criar thread"
+    }
+  }
+}

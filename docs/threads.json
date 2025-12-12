@@ -1,0 +1,583 @@
+{
+  "feature": "Thread Management System with Templates",
+  "description": "Sistema de threads com templates especializados para diferentes tipos de conteúdo. Threads só podem ser criadas em categorias leaf (sem subcategorias). Suporta 5 templates: midia, jogos, software, torrent e postagem.",
+  "baseUrl": "/api/v1/threads",
+  "templates": {
+    "description": "Templates definem a estrutura de conteúdo das threads",
+    "types": {
+      "midia": {
+        "name": "Mídia (Filmes, Séries, Animes)",
+        "requiredRoles": ["uploader", "suporte", "moderador", "admin", "master"],
+        "fields": [
+          "nome_conteudo (string, obrigatório)",
+          "poster_url (url, opcional)",
+          "genero (array, mínimo 1)",
+          "trailer_url (url, opcional)",
+          "elenco (array, opcional)",
+          "sinopse (string, mínimo 10 caracteres)",
+          "notas (string, opcional)",
+          "tamanho (string, obrigatório)",
+          "formato (array, mínimo 1)",
+          "link_download (url, obrigatório)",
+          "idiomas (array, mínimo 1)",
+          "qualidade (string, opcional)",
+          "ano (number, 1800-2100, opcional)",
+          "duracao (string, opcional)",
+          "classificacao (string, opcional)",
+          "tmdb_id (string, opcional)"
+        ]
+      },
+      "jogos": {
+        "name": "Jogos",
+        "requiredRoles": ["uploader", "suporte", "moderador", "admin", "master"],
+        "fields": [
+          "nome (string, obrigatório)",
+          "estilo (array, mínimo 1)",
+          "poster_url (url, opcional)",
+          "ano (number, 1970-2100, opcional)",
+          "sistema_operacional (array, mínimo 1)",
+          "descricao (string, mínimo 10 caracteres)",
+          "specs_minimas (string, opcional)",
+          "specs_recomendadas (string, opcional)",
+          "guia_instalacao (string, obrigatório)",
+          "tamanho (string, obrigatório)",
+          "formato (string, obrigatório)",
+          "link_download (url, obrigatório)",
+          "versao (string, opcional)",
+          "desenvolvedor (string, opcional)",
+          "publisher (string, opcional)"
+        ]
+      },
+      "software": {
+        "name": "Software",
+        "requiredRoles": ["uploader", "suporte", "moderador", "admin", "master"],
+        "fields": [
+          "nome (string, obrigatório)",
+          "categoria (array, mínimo 1)",
+          "poster_url (url, opcional)",
+          "ano (number, 1970-2100, opcional)",
+          "sistema_operacional (array, mínimo 1)",
+          "descricao (string, mínimo 10 caracteres)",
+          "requisitos (string, opcional)",
+          "guia_instalacao (string, obrigatório)",
+          "tamanho (string, obrigatório)",
+          "formato (string, obrigatório)",
+          "link_download (url, obrigatório)",
+          "versao (string, obrigatório)",
+          "desenvolvedor (string, opcional)",
+          "licenca (string, opcional)"
+        ]
+      },
+      "torrent": {
+        "name": "Torrent",
+        "requiredRoles": ["uploader", "suporte", "moderador", "admin", "master"],
+        "fields": [
+          "nome_conteudo (string, obrigatório)",
+          "poster_url (url, opcional)",
+          "genero (array, mínimo 1)",
+          "trailer_url (url, opcional)",
+          "elenco (array, opcional)",
+          "sinopse (string, mínimo 10 caracteres)",
+          "notas (string, opcional)",
+          "tamanho (string, obrigatório)",
+          "formato (array, mínimo 1)",
+          "magnet_link (string, opcional - mas obrigatório se não tiver torrent_file_url)",
+          "torrent_file_url (url, opcional - mas obrigatório se não tiver magnet_link)",
+          "idiomas (array, mínimo 1)",
+          "qualidade (string, opcional)",
+          "ano (number, 1800-2100, opcional)",
+          "seeders (number, opcional)",
+          "leechers (number, opcional)",
+          "tmdb_id (string, opcional)"
+        ]
+      },
+      "postagem": {
+        "name": "Postagem (Thread padrão)",
+        "requiredRoles": ["usuario", "vip", "uploader", "suporte", "moderador", "admin", "master"],
+        "fields": [
+          "conteudo (string, mínimo 10 caracteres)",
+          "tags (array, opcional)"
+        ]
+      }
+    }
+  },
+  "routes": [
+    {
+      "name": "Criar Thread",
+      "method": "POST",
+      "path": "/",
+      "description": "Cria uma nova thread em uma categoria leaf com template específico",
+      "authentication": "Required",
+      "authorization": "Depende do template (ver templates.types)",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "categoryId": "UUID da categoria leaf (obrigatório)",
+        "template": "midia | jogos | software | torrent | postagem (obrigatório)",
+        "title": "string (5-200 caracteres, obrigatório)",
+        "content": "object - estrutura depende do template (obrigatório)"
+      },
+      "exampleMidia": {
+        "categoryId": "uuid-da-categoria",
+        "template": "midia",
+        "title": "Dune: Parte Dois (2024) 4K UHD BluRay",
+        "content": {
+          "nome_conteudo": "Dune: Parte Dois",
+          "poster_url": "https://image.tmdb.org/t/p/original/xxx.jpg",
+          "genero": ["Ficção Científica", "Aventura"],
+          "trailer_url": "https://youtube.com/watch?v=xxx",
+          "elenco": ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
+          "sinopse": "Paul Atreides une forças com Chani e os Fremen...",
+          "notas": "Remux original sem compressão",
+          "tamanho": "85.4 GB",
+          "formato": ["MKV", "HEVC", "HDR10"],
+          "link_download": "https://exemplo.com/download",
+          "idiomas": ["Inglês", "Português"],
+          "qualidade": "4K UHD",
+          "ano": 2024,
+          "duracao": "2h 46min",
+          "classificacao": "12",
+          "tmdb_id": "693134"
+        }
+      },
+      "exampleJogos": {
+        "categoryId": "uuid-da-categoria",
+        "template": "jogos",
+        "title": "Cyberpunk 2077 Ultimate Edition v2.1",
+        "content": {
+          "nome": "Cyberpunk 2077 Ultimate Edition",
+          "estilo": ["RPG", "Ação", "Mundo Aberto"],
+          "poster_url": "https://exemplo.com/poster.jpg",
+          "ano": 2024,
+          "sistema_operacional": ["Windows"],
+          "descricao": "Jogo de RPG de ação em primeira pessoa...",
+          "specs_minimas": "CPU: i5-3570K, GPU: GTX 780, RAM: 8GB",
+          "specs_recomendadas": "CPU: i7-6700, GPU: RTX 2060, RAM: 16GB",
+          "guia_instalacao": "1. Extrair arquivos\n2. Executar setup.exe\n3. Aplicar crack...",
+          "tamanho": "120 GB",
+          "formato": "ISO",
+          "link_download": "https://exemplo.com/download",
+          "versao": "2.1",
+          "desenvolvedor": "CD Projekt Red",
+          "publisher": "CD Projekt"
+        }
+      },
+      "examplePostagem": {
+        "categoryId": "uuid-da-categoria",
+        "template": "postagem",
+        "title": "Dúvida sobre instalação de mods no GTA V",
+        "content": {
+          "conteudo": "Pessoal, estou com dificuldade para instalar mods no GTA V. Já tentei seguir vários tutoriais mas não funciona. Alguém pode me ajudar?",
+          "tags": ["gta-v", "mods", "ajuda"]
+        }
+      },
+      "validations": {
+        "categoryId": "Deve ser UUID válido e categoria deve existir",
+        "categoryLeaf": "Categoria não pode ter subcategorias (deve ser leaf node)",
+        "categoryLocked": "Categoria não pode estar bloqueada",
+        "template": "Deve ser um dos 5 templates válidos",
+        "title": "5-200 caracteres",
+        "content": "Estrutura depende do template escolhido",
+        "userRole": "Usuário deve ter cargo suficiente para o template"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "thread": {
+            "id": "uuid",
+            "category_id": "uuid",
+            "author_id": "uuid",
+            "template": "midia",
+            "title": "Dune: Parte Dois (2024) 4K UHD BluRay",
+            "slug": "dune-parte-dois-2024-4k-uhd-bluray",
+            "status": "active",
+            "view_count": 0,
+            "reply_count": 0,
+            "is_pinned": false,
+            "is_locked": false,
+            "last_reply_at": null,
+            "last_reply_by": null,
+            "created_at": "timestamp",
+            "updated_at": "timestamp",
+            "content": {}
+          },
+          "message": "Thread criada com sucesso"
+        }
+      }
+    },
+    {
+      "name": "Listar Threads",
+      "method": "GET",
+      "path": "/",
+      "description": "Lista threads com filtros e paginação",
+      "authentication": "Public",
+      "queryParams": {
+        "categoryId": "UUID - filtrar por categoria (opcional)",
+        "authorId": "UUID - filtrar por autor (opcional)",
+        "template": "string - filtrar por template (opcional)",
+        "status": "active|locked|pinned|archived - filtrar por status (opcional, default: active)",
+        "isPinned": "boolean - filtrar threads fixadas (opcional)",
+        "limit": "number - itens por página (opcional, default: 50, max: 100)",
+        "offset": "number - offset para paginação (opcional, default: 0)",
+        "sortBy": "recent|popular|replies|views - ordenação (opcional, default: recent)"
+      },
+      "example": "/api/v1/threads?categoryId=uuid&limit=20&sortBy=popular",
+      "response": {
+        "success": true,
+        "data": {
+          "threads": [
+            {
+              "id": "uuid",
+              "category_id": "uuid",
+              "title": "string",
+              "slug": "string",
+              "template": "midia",
+              "status": "active",
+              "view_count": 1523,
+              "reply_count": 45,
+              "is_pinned": false,
+              "is_locked": false,
+              "author": {
+                "id": "uuid",
+                "username": "string",
+                "avatar_url": "string",
+                "role": "uploader"
+              },
+              "last_reply_at": "timestamp",
+              "last_reply_by": "uuid",
+              "created_at": "timestamp"
+            }
+          ],
+          "pagination": {
+            "total": 156,
+            "limit": 50,
+            "offset": 0,
+            "hasMore": true
+          }
+        }
+      }
+    },
+    {
+      "name": "Buscar Thread por ID",
+      "method": "GET",
+      "path": "/:threadId",
+      "description": "Busca thread completa por ID com todos os detalhes e conteúdo",
+      "authentication": "Public",
+      "params": {
+        "threadId": "UUID da thread"
+      },
+      "example": "/api/v1/threads/uuid-da-thread",
+      "response": {
+        "success": true,
+        "data": {
+          "thread": {
+            "id": "uuid",
+            "category_id": "uuid",
+            "author_id": "uuid",
+            "template": "midia",
+            "title": "string",
+            "slug": "string",
+            "status": "active",
+            "view_count": 1524,
+            "reply_count": 45,
+            "is_pinned": false,
+            "is_locked": false,
+            "last_reply_at": "timestamp",
+            "created_at": "timestamp",
+            "updated_at": "timestamp",
+            "content": {},
+            "author": {
+              "id": "uuid",
+              "username": "string",
+              "avatar_url": "string",
+              "role": "uploader"
+            },
+            "category": {
+              "id": "uuid",
+              "name": "4K UHD",
+              "slug": "4k-uhd",
+              "level": 2
+            },
+            "breadcrumbs": [
+              {"id": "uuid", "name": "GTracker", "slug": "gtracker", "level": 0},
+              {"id": "uuid", "name": "Filmes", "slug": "filmes", "level": 1},
+              {"id": "uuid", "name": "4K UHD", "slug": "4k-uhd", "level": 2}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Buscar Thread por Slug",
+      "method": "GET",
+      "path": "/category/:categoryId/slug/:slug",
+      "description": "Busca thread por slug dentro de uma categoria específica",
+      "authentication": "Public",
+      "params": {
+        "categoryId": "UUID da categoria",
+        "slug": "Slug da thread"
+      },
+      "example": "/api/v1/threads/category/uuid/slug/dune-parte-dois-2024",
+      "response": "Mesmo formato de /threads/:threadId"
+    },
+    {
+      "name": "Atualizar Thread",
+      "method": "PATCH",
+      "path": "/:threadId",
+      "description": "Atualiza título, conteúdo ou status da thread. Autor pode editar título e conteúdo. Moderador+ pode editar tudo.",
+      "authentication": "Required (Autor ou Moderador+)",
+      "headers": {
+        "Authorization": "Bearer {token}",
+        "Content-Type": "application/json"
+      },
+      "params": {
+        "threadId": "UUID da thread"
+      },
+      "body": {
+        "title": "string (5-200 caracteres, opcional)",
+        "content": "object - campos específicos do template (opcional)",
+        "status": "active|locked|pinned|archived (opcional, apenas moderador+)"
+      },
+      "example": {
+        "title": "Dune: Parte Dois (2024) 4K UHD BluRay ATUALIZADO",
+        "content": {
+          "link_download": "https://novo-link.com/download"
+        }
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "thread": {},
+          "message": "Thread atualizada com sucesso"
+        }
+      }
+    },
+    {
+      "name": "Deletar Thread",
+      "method": "DELETE",
+      "path": "/:threadId",
+      "description": "Deleta uma thread. Autor pode deletar sua própria thread. Moderador+ pode deletar qualquer thread.",
+      "authentication": "Required (Autor ou Moderador+)",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "params": {
+        "threadId": "UUID da thread"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "message": "Thread deletada com sucesso"
+        }
+      }
+    },
+    {
+      "name": "Fixar/Desfixar Thread",
+      "method": "PATCH",
+      "path": "/:threadId/toggle-pin",
+      "description": "Fixa ou desfixa thread no topo da categoria",
+      "authentication": "Required (Moderador+)",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "params": {
+        "threadId": "UUID da thread"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "thread": {},
+          "message": "Thread fixada no topo"
+        }
+      }
+    },
+    {
+      "name": "Bloquear/Desbloquear Thread",
+      "method": "PATCH",
+      "path": "/:threadId/toggle-lock",
+      "description": "Bloqueia ou desbloqueia thread (impede novas respostas quando bloqueada)",
+      "authentication": "Required (Moderador+)",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "params": {
+        "threadId": "UUID da thread"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "thread": {},
+          "message": "Thread bloqueada. Novas respostas não são permitidas."
+        }
+      }
+    },
+    {
+      "name": "Arquivar Thread",
+      "method": "PATCH",
+      "path": "/:threadId/archive",
+      "description": "Arquiva uma thread (não aparece em listagens normais)",
+      "authentication": "Required (Moderador+)",
+      "headers": {
+        "Authorization": "Bearer {token}"
+      },
+      "params": {
+        "threadId": "UUID da thread"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "thread": {},
+          "message": "Thread arquivada com sucesso"
+        }
+      }
+    }
+  ],
+  "categoryIntegration": {
+    "description": "Quando uma categoria leaf é buscada, threads são incluídas automaticamente",
+    "endpoints": [
+      "GET /api/v1/categories/:categoryId",
+      "GET /api/v1/categories/slug/:slug"
+    ],
+    "behavior": "Se categoria não tiver subcategorias (leaf node), response inclui threads paginadas",
+    "queryParams": {
+      "limit": "number - threads por página (opcional, default: 50)",
+      "offset": "number - offset de paginação (opcional, default: 0)",
+      "sortBy": "recent|popular|replies|views (opcional, default: recent)"
+    },
+    "exampleResponse": {
+      "success": true,
+      "data": {
+        "category": {},
+        "subcategories": [],
+        "threads": [],
+        "pagination": {
+          "total": 156,
+          "limit": 50,
+          "offset": 0,
+          "hasMore": true
+        }
+      }
+    }
+  },
+  "errorResponses": {
+    "400": {
+      "description": "Bad Request - Validação falhou",
+      "examples": [
+        {
+          "success": false,
+          "error": {
+            "message": "Threads só podem ser criadas em categorias finais (sem subcategorias)",
+            "code": "BAD_REQUEST"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Título deve ter pelo menos 5 caracteres",
+            "code": "VALIDATION_ERROR"
+          }
+        }
+      ]
+    },
+    "401": {
+      "description": "Unauthorized - Token inválido",
+      "example": {
+        "success": false,
+        "error": {
+          "message": "Token inválido ou expirado",
+          "code": "UNAUTHORIZED"
+        }
+      }
+    },
+    "403": {
+      "description": "Forbidden - Sem permissão",
+      "examples": [
+        {
+          "success": false,
+          "error": {
+            "message": "Seu cargo (usuario) não tem permissão para criar threads do tipo \"midia\"",
+            "code": "FORBIDDEN"
+          }
+        },
+        {
+          "success": false,
+          "error": {
+            "message": "Esta categoria está bloqueada para novos threads",
+            "code": "FORBIDDEN"
+          }
+        }
+      ]
+    },
+    "404": {
+      "description": "Not Found - Thread ou categoria não encontrada",
+      "example": {
+        "success": false,
+        "error": {
+          "message": "Thread não encontrada",
+          "code": "NOT_FOUND"
+        }
+      }
+    }
+  },
+  "security": {
+    "publicRoutes": [
+      "GET /",
+      "GET /:threadId",
+      "GET /category/:categoryId/slug/:slug"
+    ],
+    "authenticatedRoutes": [
+      "POST /",
+      "PATCH /:threadId",
+      "DELETE /:threadId"
+    ],
+    "moderatorRoutes": [
+      "PATCH /:threadId/toggle-pin",
+      "PATCH /:threadId/toggle-lock",
+      "PATCH /:threadId/archive"
+    ],
+    "permissions": "Verificadas por template no momento da criação",
+    "validation": "Zod schemas para todos os inputs",
+    "slugGeneration": "Automático e único por categoria"
+  },
+  "database": {
+    "tables": [
+      "threads (thread principal)",
+      "thread_midia_content (conteúdo mídia)",
+      "thread_jogos_content (conteúdo jogos)",
+      "thread_software_content (conteúdo software)",
+      "thread_torrent_content (conteúdo torrent)",
+      "thread_postagem_content (conteúdo postagem)"
+    ],
+    "migration": "006_threads_system.sql",
+    "functions": [
+      "is_leaf_category(category_id) - Verifica se categoria é leaf",
+      "get_category_breadcrumbs(category_id) - Retorna breadcrumbs",
+      "update_category_thread_counters() - Atualiza contadores automáticos"
+    ],
+    "triggers": [
+      "validate_thread_category - Valida que thread só é criada em leaf",
+      "update_category_counters - Atualiza contadores nas categorias",
+      "update_thread_updated_at - Atualiza timestamp automaticamente"
+    ],
+    "constraints": [
+      "Thread só pode ser criada em categoria leaf (validado via trigger)",
+      "Categoria bloqueada impede criação de threads",
+      "Slug único por categoria",
+      "CASCADE DELETE de thread deleta conteúdo automaticamente"
+    ]
+  },
+  "bestPractices": [
+    "Sempre validar permissão de cargo antes de criar thread",
+    "Templates midia/jogos/software/torrent requerem cargo uploader ou superior",
+    "Template postagem pode ser usado por qualquer usuário",
+    "Slugs são gerados automaticamente a partir do título",
+    "Threads fixadas aparecem primeiro na listagem",
+    "Threads bloqueadas não aceitam novas respostas",
+    "Moderadores podem editar/deletar qualquer thread",
+    "Autores podem editar/deletar apenas suas próprias threads",
+    "Use breadcrumbs para navegação contextual",
+    "Visualizações são incrementadas automaticamente"
+  ]
+}

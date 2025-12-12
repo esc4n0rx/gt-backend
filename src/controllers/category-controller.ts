@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { sendSuccess } from '../utils/api-response';
 import { ApiError } from '../utils/api-error';
 import { categoryRepository } from '../repositories/category-repository';
+import { threadRepository } from '../repositories/thread-repository';
 import {
   CreateCategoryInput,
   UpdateCategoryInput,
@@ -97,10 +98,36 @@ export class CategoryController {
       // Buscar subcategorias
       const subcategories = await categoryRepository.findByParentId(categoryId);
 
-      sendSuccess(res, {
+      // Se for leaf node (sem subcategorias), buscar threads paginadas
+      const responseData: any = {
         category,
         subcategories,
-      });
+      };
+
+      if (subcategories.length === 0) {
+        // É leaf node - buscar threads
+        const limit = parseInt(req.query.limit as string) || 50;
+        const offset = parseInt(req.query.offset as string) || 0;
+
+        const threads = await threadRepository.list({
+          categoryId,
+          limit,
+          offset,
+          sortBy: (req.query.sortBy as any) || 'recent',
+        });
+
+        const totalThreads = await threadRepository.count({ categoryId });
+
+        responseData.threads = threads;
+        responseData.pagination = {
+          total: totalThreads,
+          limit,
+          offset,
+          hasMore: offset + limit < totalThreads,
+        };
+      }
+
+      sendSuccess(res, responseData);
     } catch (error) {
       next(error);
     }
@@ -120,10 +147,36 @@ export class CategoryController {
       // Buscar subcategorias
       const subcategories = await categoryRepository.findByParentId(category.id);
 
-      sendSuccess(res, {
+      // Se for leaf node (sem subcategorias), buscar threads paginadas
+      const responseData: any = {
         category,
         subcategories,
-      });
+      };
+
+      if (subcategories.length === 0) {
+        // É leaf node - buscar threads
+        const limit = parseInt(req.query.limit as string) || 50;
+        const offset = parseInt(req.query.offset as string) || 0;
+
+        const threads = await threadRepository.list({
+          categoryId: category.id,
+          limit,
+          offset,
+          sortBy: (req.query.sortBy as any) || 'recent',
+        });
+
+        const totalThreads = await threadRepository.count({ categoryId: category.id });
+
+        responseData.threads = threads;
+        responseData.pagination = {
+          total: totalThreads,
+          limit,
+          offset,
+          hasMore: offset + limit < totalThreads,
+        };
+      }
+
+      sendSuccess(res, responseData);
     } catch (error) {
       next(error);
     }

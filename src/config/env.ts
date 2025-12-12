@@ -19,6 +19,8 @@ const envSchema = z.object({
   // Resend
   RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY é obrigatória'),
   EMAIL_FROM: z.string().email('EMAIL_FROM deve ser um email válido').default('noreply@gtracker.com'),
+  // External APIs
+  TMDB_API_KEY: z.string().optional(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
