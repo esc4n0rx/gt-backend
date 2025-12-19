@@ -61,8 +61,8 @@ export const threadSoftwareContentSchema = z.object({
   licenca: z.string().max(100).nullable().optional(),
 });
 
-// Template: TORRENT
-export const threadTorrentContentSchema = z.object({
+// Template: TORRENT (base schema sem validação)
+const threadTorrentContentBaseSchema = z.object({
   nome_conteudo: z.string().min(1).max(200),
   poster_url: z.string().url().nullable().optional(),
   genero: z.array(z.string()).min(1, 'Pelo menos um gênero é obrigatório'),
@@ -80,7 +80,10 @@ export const threadTorrentContentSchema = z.object({
   seeders: z.number().int().min(0).nullable().optional(),
   leechers: z.number().int().min(0).nullable().optional(),
   tmdb_id: z.string().max(50).nullable().optional(),
-}).refine(
+});
+
+// Template: TORRENT (com validação de links)
+export const threadTorrentContentSchema = threadTorrentContentBaseSchema.refine(
   (data) => data.magnet_link || data.torrent_file_url,
   {
     message: 'Pelo menos um link (magnet ou arquivo torrent) é obrigatório',
@@ -137,7 +140,7 @@ export const updateThreadSchema = z.object({
         threadMidiaContentSchema.partial(),
         threadJogosContentSchema.partial(),
         threadSoftwareContentSchema.partial(),
-        threadTorrentContentSchema.partial(),
+        threadTorrentContentBaseSchema.partial(),
         threadPostagemContentSchema.partial(),
       ])
       .optional(),
